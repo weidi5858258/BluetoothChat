@@ -26,8 +26,17 @@ import static com.weidi.bluetoothchat.Constant.FIXEDTHREADPOOLCOUNT;
  * Created by root on 16-12-16.
  */
 
-/**
- * 现在只考虑某个设备作为服务端后,就不能再作为客户端去连接其他设备了
+/***
+ 本应用的蓝牙设备既可以作为服务器端，又可以作为客户端去连接其他设备的服务器端
+ 服务端主动发送消息时，需要向每个客户端发送消息，再加上自己作为客户端要向其他服务端发送消息；
+ 服务端被动发送消息时，有两种情况，
+ 一是自己作为服务端，接收了某个客户端发送来的消息，此时的消息需要向其他客户端转发，
+ 并且自己作为客户端时要向服务端进行转发；
+ 二是自己作为客户端，接收了某个服务端发送来的消息，此时的消息需要向自己作为服务端
+ 时的每个客户端进行转发。
+
+
+
  */
 public class BTServer {
 
@@ -71,21 +80,24 @@ public class BTServer {
     }
 
     public static void setBTServerToNull() {
+        if (getInstance() == null) {
+            return;
+        }
         try {
-            if (mBTServer.mBluetoothServerSocket != null) {
-                mBTServer.mBluetoothServerSocket.close();
-                mBTServer.mBluetoothServerSocket = null;
+            if (getInstance().mBluetoothServerSocket != null) {
+                getInstance().mBluetoothServerSocket.close();
+                getInstance().mBluetoothServerSocket = null;
             }
-            if (mBTServer.btSocketList != null && mBTServer.btSocketList.size() > 0) {
-                for (BluetoothSocket socket : mBTServer.btSocketList) {
+            if (getInstance().btSocketList != null && getInstance().btSocketList.size() > 0) {
+                for (BluetoothSocket socket : getInstance().btSocketList) {
                     socket.close();
                 }
-                mBTServer.btSocketList.clear();
-                mBTServer.btSocketList = null;
+                getInstance().btSocketList.clear();
+                getInstance().btSocketList = null;
             }
-            mBTServer.mIRemoteConnection = null;
-            mBTServer.isAccept = false;
-            mBTServer.isReceiveMsg = false;
+            getInstance().mIRemoteConnection = null;
+            getInstance().isAccept = false;
+            getInstance().isReceiveMsg = false;
             mBTServer = null;
         } catch (IOException e) {
             e.printStackTrace();
@@ -129,7 +141,7 @@ public class BTServer {
     }
 
     public void accept() {
-        Log.d(TAG, "服务端进入accept()方法");
+        Log.i(TAG, "服务端进入accept()方法");
         BluetoothSocket mBluetoothSocketWithClient = null;
         try {
             UUID uuid = UUID.fromString(BTController.BT_UUID);
@@ -140,25 +152,25 @@ public class BTServer {
                             uuid);
             if (mBluetoothServerSocket == null) {
                 if (mIRemoteConnection != null) {
-                    Log.d(TAG, "连接客户端时得到的BluetoothServerSocket对象为null!");
+                    Log.i(TAG, "连接客户端时得到的BluetoothServerSocket对象为null!");
                     mIRemoteConnection.onConnected(mBluetoothSocketWithClient, false);
                 }
                 return;
             }
             while (isAccept) {
-                Log.d(TAG, "本机已作为服务端正在等待客户端的连接...");
+                Log.i(TAG, "本机已作为服务端正在等待客户端的连接...");
                 mBluetoothSocketWithClient = mBluetoothServerSocket.accept();
                 if (mBluetoothSocketWithClient != null) {
                     btSocketList.add(mBluetoothSocketWithClient);
                 }
                 if (mIRemoteConnection != null) {
-                    Log.d(TAG, "mBluetoothSocketWithClient = " + mBluetoothSocketWithClient);
+                    Log.i(TAG, "mBluetoothSocketWithClient = " + mBluetoothSocketWithClient);
                     mIRemoteConnection.onConnected(mBluetoothSocketWithClient, true);
                 }
             }
         } catch (Exception e) {
             if (mIRemoteConnection != null) {
-                Log.d(TAG, "服务端accept()方法中出现异常!");
+                Log.i(TAG, "服务端accept()方法中出现异常!");
                 mIRemoteConnection.onConnected(mBluetoothSocketWithClient, false);
             }
             e.printStackTrace();
@@ -167,21 +179,20 @@ public class BTServer {
 
     public void disConnect(BluetoothSocket socket) {
         try {
-            if (socket == null) {
-                return;
-            }
-            if (btSocketList == null || btSocketList.size() == 0
+            if (socket == null
+                    || btSocketList == null
+                    || btSocketList.isEmpty()
                     || !btSocketList.contains(socket)) {
                 return;
             }
             socket.close();
             if (mIRemoteConnection != null) {
-                Log.d(TAG, "已与客户端断开连接");
+                Log.i(TAG, "已与客户端断开连接");
                 mIRemoteConnection.onConnected(socket, false);
             }
         } catch (Exception e) {
             if (mIRemoteConnection != null) {
-                Log.d(TAG, "与客户端断开连接时发生异常");
+                Log.i(TAG, "与客户端断开连接时发生异常");
                 mIRemoteConnection.onConnected(socket, false);
             }
             e.printStackTrace();
@@ -190,27 +201,12 @@ public class BTServer {
 
     public void disConnectAll() {
         BluetoothSocket socket = null;
-        try {
-            if (btSocketList != null && btSocketList.size() > 0) {
-                int count = btSocketList.size();
-                for (int i = 0; i < count; ++i) {
-                    socket = btSocketList.get(i);
-                    if (socket == null) {
-                        continue;
-                    }
-                    socket.close();
-                    if (mIRemoteConnection != null) {
-                        Log.d(TAG, "已与客户端断开连接");
-                        mIRemoteConnection.onConnected(socket, false);
-                    }
-                }
+        if (btSocketList != null && !btSocketList.isEmpty()) {
+            int count = btSocketList.size();
+            for (int i = 0; i < count; ++i) {
+                socket = btSocketList.get(i);
+                disConnect(socket);
             }
-        } catch (Exception e) {
-            if (mIRemoteConnection != null) {
-                Log.d(TAG, "与客户端断开连接时发生异常");
-                mIRemoteConnection.onConnected(socket, false);
-            }
-            e.printStackTrace();
         }
     }
 
@@ -224,12 +220,16 @@ public class BTServer {
     public void sendMessage(BluetoothSocket socket, String message) {
         if (socket == null || !socket.isConnected() || TextUtils.isEmpty(message)) {
             if (mIRemoteConnection != null) {
-                Log.d(TAG, "服务端sendMessage()方法中出现条件不满足!");
+                Log.i(TAG, "服务端sendMessage()方法中条件不满足!");
                 mIRemoteConnection.onConnected(socket, false);
             }
             return;
         }
         try {
+            /***
+             消息的规则：
+             蓝牙名称Constant.SEPARATOR蓝牙地址Constant.SEPARATOR需要发送的消息\n
+             */
             OutputStream mOutputStream = socket.getOutputStream();
             if (mOutputStream != null) {
                 StringBuilder stringBuilder = new StringBuilder();
@@ -253,11 +253,11 @@ public class BTServer {
                     showMsg.obj = msgBean;
                     msgHandler.sendMessage(showMsg);
                 }
-                Log.d(TAG, "sendMessage = " + stringBuilder.toString());
+                Log.i(TAG, "sendMessage = " + stringBuilder.toString());
             }
         } catch (IOException e) {
             if (mIRemoteConnection != null) {
-                Log.d(TAG, "服务端sendMessage()方法中出现异常!");
+                Log.i(TAG, "服务端sendMessage()方法中出现异常!");
                 mIRemoteConnection.onConnected(socket, false);
             }
             e.printStackTrace();
@@ -274,7 +274,7 @@ public class BTServer {
     public void sendMessage2(BluetoothSocket socket, String message) {
         if (socket == null || !socket.isConnected() || TextUtils.isEmpty(message)) {
             if (mIRemoteConnection != null) {
-                Log.d(TAG, "服务端sendMessage2()方法中出现条件不满足!");
+                Log.i(TAG, "服务端sendMessage2()方法中条件不满足!");
                 mIRemoteConnection.onConnected(socket, false);
             }
             return;
@@ -285,11 +285,11 @@ public class BTServer {
                 message += "\n";
                 mOutputStream.write(message.getBytes("utf-8"));
                 mOutputStream.flush();
-                Log.d(TAG, "sendMessage2 = " + message);
+                Log.i(TAG, "sendMessage2 = " + message);
             }
         } catch (IOException e) {
             if (mIRemoteConnection != null) {
-                Log.d(TAG, "服务端sendMessage2()方法中出现异常!");
+                Log.i(TAG, "服务端sendMessage2()方法中出现异常!");
                 mIRemoteConnection.onConnected(socket, false);
             }
             e.printStackTrace();
@@ -302,13 +302,12 @@ public class BTServer {
      * @param message
      */
     public void sendMessageAll(String message) {
-        if (btSocketList == null || btSocketList.size() <= 0) {
+        if (btSocketList == null || btSocketList.isEmpty()) {
             return;
         }
         int count = btSocketList.size();
         for (int i = 0; i < count; ++i) {
-            BluetoothSocket socket = btSocketList.get(i);
-            sendMessage(socket, message);
+            sendMessage(btSocketList.get(i), message);
         }
     }
 
@@ -318,13 +317,12 @@ public class BTServer {
      * @param message
      */
     public void sendMessageAll2(String message) {
-        if (btSocketList == null || btSocketList.size() <= 0) {
+        if (btSocketList == null || btSocketList.isEmpty()) {
             return;
         }
         int count = btSocketList.size();
         for (int i = 0; i < count; ++i) {
-            BluetoothSocket socket = btSocketList.get(i);
-            sendMessage2(socket, message);
+            sendMessage2(btSocketList.get(i), message);
         }
     }
 
@@ -336,28 +334,28 @@ public class BTServer {
     public void receiveMessage(BluetoothSocket socket) {
         if (socket == null || !socket.isConnected()) {
             if (mIRemoteConnection != null) {
-                Log.d(TAG, "服务端receiveMessage()方法中出现条件不满足!");
+                Log.i(TAG, "服务端receiveMessage()方法中出现条件不满足!");
                 mIRemoteConnection.onConnected(socket, false);
             }
             return;
         }
         try {
-            Log.d(TAG, "服务端准备接收消息");
-            InputStream mInputStream = socket.getInputStream();
+            Log.i(TAG, "服务端准备接收消息");
+            InputStream inputStream = socket.getInputStream();
             // 从客户端获取信息
             BufferedReader mBufferedReader = new BufferedReader(
-                    new InputStreamReader(mInputStream));
+                    new InputStreamReader(inputStream));
             String receiveMessage = null;
 
             while (isReceiveMsg) {
-                Log.d(TAG, "服务端进入while循环,一直监听消息的到来");
+                Log.i(TAG, "服务端进入while循环,一直监听消息的到来");
                 if (mBufferedReader != null
                         && socket != null
                         && socket.isConnected()
                         && isReceiveMsg) {
                     while ((receiveMessage = mBufferedReader.readLine()) != null) {
                         if (receiveMessage.contains(Constant.SEPARATOR)) {
-                            Log.d(TAG, "receiveMessage():msg = " + receiveMessage);
+                            Log.i(TAG, "receiveMessage():msg = " + receiveMessage);
                             String[] msg = receiveMessage.split(Constant.SEPARATOR);
 
                             // 自己在聊天界面显示msg[1]消息
@@ -380,17 +378,19 @@ public class BTServer {
 
                         receiveMessage = null;
                     }
+
                 } else {
                     if (mIRemoteConnection != null) {
-                        Log.d(TAG, "服务端receiveMessage()方法中接收消息时出现条件不满足!");
+                        Log.i(TAG, "服务端receiveMessage()方法中接收消息时条件不满足!");
                         mIRemoteConnection.onConnected(socket, false);
                     }
                     break;
+
                 }
             }
         } catch (IOException e) {
             if (mIRemoteConnection != null) {
-                Log.d(TAG, "服务端receiveMessage()方法中出现异常!");
+                Log.i(TAG, "服务端receiveMessage()方法中出现异常!");
                 mIRemoteConnection.onConnected(socket, false);
             }
             e.printStackTrace();

@@ -317,7 +317,7 @@ public class DevicesActivityController extends BaseController {
                 inin1();
             }
         } else {
-            //
+            // 不支持蓝牙设备
         }
     }
 

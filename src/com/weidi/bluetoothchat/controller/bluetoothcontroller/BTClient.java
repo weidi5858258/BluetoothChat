@@ -55,14 +55,17 @@ public class BTClient {
     }
 
     public static void setBTClientToNull() {
+        if(getInstance() == null){
+            return;
+        }
         try {
-            mBTClient.mRemoteBluetoothDevice = null;
-            if (mBTClient.mRemoteBluetoothSocket != null) {
-                mBTClient.mRemoteBluetoothSocket.close();
-                mBTClient.mRemoteBluetoothSocket = null;
+            getInstance().mRemoteBluetoothDevice = null;
+            if (getInstance().mRemoteBluetoothSocket != null) {
+                getInstance().mRemoteBluetoothSocket.close();
+                getInstance().mRemoteBluetoothSocket = null;
             }
-            mBTClient.mIRemoteConnection = null;
-            mBTClient.isReceiveMsg = false;
+            getInstance().mIRemoteConnection = null;
+            getInstance().isReceiveMsg = false;
             mBTClient = null;
         } catch (IOException e) {
             e.printStackTrace();

@@ -393,82 +393,6 @@ public class BTController {
     //    }
 
     /**
-     发送文本消息
-     *
-     @param message
-     */
-    //    public void sendMessage(String message) {
-    //        if (getRemoteBluetoothSocket() == null
-    //                || !getRemoteBluetoothSocket().isConnected()
-    //                || TextUtils.isEmpty(message)) {
-    //            if (mIRemoteConnection != null) {
-    //                Log.d(TAG, "客户端sendMessage()方法中出现条件不满足!");
-    //                mIRemoteConnection.onConnected(false);
-    //            }
-    //            return;
-    //        }
-    //        try {
-    //            message += "\n";
-    //            OutputStream mOutputStream = getRemoteBluetoothSocket().getOutputStream();
-    //            if (mOutputStream != null) {
-    //                mOutputStream.write(message.getBytes("utf-8"));
-    //                mOutputStream.flush();
-    //                Log.d(TAG, "sendMessage = " + message);
-    //            }
-    //        } catch (IOException e) {
-    //            if (mIRemoteConnection != null) {
-    //                Log.d(TAG, "客户端sendMessage()方法中出现异常!");
-    //                mIRemoteConnection.onConnected(false);
-    //            }
-    //            e.printStackTrace();
-    //        }
-    //    }
-
-    /**
-     接收文本消息
-     */
-    //    public void receiveMessage() {
-    //        if (getRemoteBluetoothSocket() == null || !getRemoteBluetoothSocket().isConnected()) {
-    //            if (mIRemoteConnection != null) {
-    //                Log.d(TAG, "客户端receiveMessage()方法中出现条件不满足!");
-    //                mIRemoteConnection.onConnected(false);
-    //            }
-    //            return;
-    //        }
-    //        try {
-    //            Log.d(TAG, "客户端准备接收消息");
-    //            InputStream mInputStream = getRemoteBluetoothSocket().getInputStream();
-    //            // 从客户端获取信息
-    //            BufferedReader mBufferedReader = new BufferedReader(new InputStreamReader
-    //                    (mInputStream));
-    //            String receiveMessage = null;
-    //
-    //            while (true) {
-    //                Log.d(TAG, "客户端进入while循环,一直监听消息的到来");
-    //                if (mBufferedReader != null
-    //                        && getRemoteBluetoothSocket() != null
-    //                        && getRemoteBluetoothSocket().isConnected()) {
-    //                    while ((receiveMessage = mBufferedReader.readLine()) != null) {
-    //                        Log.d(TAG, "receiveMessage():msg = " + receiveMessage);
-    //                    }
-    //                } else {
-    //                    if (mIRemoteConnection != null) {
-    //                        Log.d(TAG, "客户端receiveMessage()方法中接收消息时出现条件不满足!");
-    //                        mIRemoteConnection.onConnected(false);
-    //                    }
-    //                    break;
-    //                }
-    //            }
-    //        } catch (IOException e) {
-    //            if (mIRemoteConnection != null) {
-    //                Log.d(TAG, "客户端receiveMessage()方法中出现异常!");
-    //                mIRemoteConnection.onConnected(false);
-    //            }
-    //            e.printStackTrace();
-    //        }
-    //    }
-
-    /**
      * 与设备配对
      * 配对成功则返回true
      * 参考源码：platform/packages/apps/Settings.git
@@ -576,7 +500,7 @@ public class BTController {
         try {
             Class bdClass = BluetoothDevice.class;
             Method cancelPairingUserInput = bdClass.getMethod("cancelPairingUserInput");
-            //            cancelBondProcess(btDevice);
+            // cancelBondProcess(btDevice);
             returnValue = (Boolean) cancelPairingUserInput.invoke(btDevice);
             Log.d("cancelPairingUserInput() = " + returnValue);
         } catch (Exception e) {
@@ -612,7 +536,7 @@ public class BTController {
         mIntentFilter.addAction(BluetoothDevice.ACTION_FOUND);
         // 指明一个远程设备的连接状态的改变
         mIntentFilter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-        mIntentFilter.addAction("android.bluetooth.device.action.PAIRING_REQUEST");
+        mIntentFilter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
         mContext.registerReceiver(mBluetoothReceiver, mIntentFilter);
         hasRegister = true;
     }
@@ -628,49 +552,55 @@ public class BTController {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent == null) {
-                Log.e(TAG, "intent == null");
+                Log.i(TAG, "intent == null");
                 return;
             }
             String action = intent.getAction();
             if (mIBluetoothAction == null) {
-                Log.e(TAG, "mIBluetoothAction == null");
+                Log.i(TAG, "mIBluetoothAction == null");
                 return;
             }
             if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
-                Log.e(TAG, "接收到 action=BluetoothAdapter.ACTION_DISCOVERY_STARTED");
+                Log.i(TAG, "接收到 action=BluetoothAdapter.ACTION_DISCOVERY_STARTED");
                 mIBluetoothAction.actionDiscoveryStarted();
                 return;
+
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                Log.e(TAG, "接收到 action=BluetoothAdapter.ACTION_DISCOVERY_FINISHED");
+                Log.i(TAG, "接收到 action=BluetoothAdapter.ACTION_DISCOVERY_FINISHED");
                 mIBluetoothAction.actionDiscoveryFinished();
                 return;
+
             }
-            BluetoothDevice mBluetoothDevice = intent.getParcelableExtra(
+            
+            BluetoothDevice bluetoothDevice = intent.getParcelableExtra(
                     BluetoothDevice.EXTRA_DEVICE);
-            if (mBluetoothDevice == null) {
-                Log.e(TAG, "mBluetoothDevice == null");
+            if (bluetoothDevice == null) {
+                Log.i(TAG, "bluetoothDevice is null");
                 return;
             }
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                //                Log.e(TAG, "接收到action=BluetoothDevice.ACTION_FOUND");
-                mIBluetoothAction.actionFound(mBluetoothDevice);
+                Log.i(TAG, "接收到action=BluetoothDevice.ACTION_FOUND");
+                mIBluetoothAction.actionFound(bluetoothDevice);
+
             } else if (BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(action)) {
-                Log.e(TAG, "接收到 action=BluetoothDevice.ACTION_BOND_STATE_CHANGED");
-                mIBluetoothAction.actionBondStateChanged(mBluetoothDevice);
-                if (mBluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDING) {
-                    mIBluetoothAction.btBondBonding(mBluetoothDevice);
-                } else if (mBluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-                    mIBluetoothAction.btBondBonded(mBluetoothDevice);
-                } else if (mBluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
+                Log.i(TAG, "接收到 action=BluetoothDevice.ACTION_BOND_STATE_CHANGED");
+                mIBluetoothAction.actionBondStateChanged(bluetoothDevice);
+                if (bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDING) {
+                    mIBluetoothAction.btBondBonding(bluetoothDevice);
+                } else if (bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
+                    mIBluetoothAction.btBondBonded(bluetoothDevice);
+                } else if (bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
                     if (BTClient.getInstance().getIRemoteConnection() != null) {
                         Log.d(TAG, "接收到\"BluetoothDevice.BOND_NONE\"的广播");
                         BTClient.getInstance().getIRemoteConnection().onConnected(false);
                     }
-                    mIBluetoothAction.btBondNone(mBluetoothDevice);
+                    mIBluetoothAction.btBondNone(bluetoothDevice);
                 }
-            } else if ("android.bluetooth.device.action.PAIRING_REQUEST".equals(action)) {
-                Log.e(TAG, "接收到 action=BluetoothDevice.ACTION_PAIRING_REQUEST");
+
+            } else if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(action)) {
+                Log.i(TAG, "接收到 action=BluetoothDevice.ACTION_PAIRING_REQUEST");
                 mIBluetoothAction.actionPairingRequest();
+
             }
         }
     };
