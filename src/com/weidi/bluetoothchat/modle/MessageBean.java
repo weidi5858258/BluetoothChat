@@ -1,11 +1,11 @@
 package com.weidi.bluetoothchat.modle;
 
-import com.weidi.bluetoothchat.dbutil.DbVersion;
-import com.weidi.bluetoothchat.dbutil.Primary;
+import com.weidi.dbutil.ClassVersion;
+import com.weidi.dbutil.Primary;
 
 import java.io.Serializable;
 
-@DbVersion(version = 0)
+@ClassVersion(version = 0)
 public class MessageBean implements Serializable {
 
     @Primary
@@ -13,12 +13,20 @@ public class MessageBean implements Serializable {
 
     public String msgSender;
 
-    public String msgBTAdress;
+    public String msgBTAddress;
 
     public int msgHomeOwnership;
 
     public String msgContent;
 
+    public String msgFilePath;
+
+    public long msgSendTime;
+
     public boolean isReceiveMSg;
+
+    public int canSaveMyMsgType;
+
+    public int canSaveOtherMsgType;
 
 }

@@ -9,10 +9,16 @@ public interface Constant {
     int NONE = 0;
     int CLIENT = 1;
     int SERVER = 2;
+    int CS = 3;
+    int HIDE = 10;
+    int POPBACKSTACK = 11;
     int FIXEDTHREADPOOLCOUNT = 15;
     int ACTION_REQUEST_ENABLE = 100;
     int MSG_HOME_OWNERSHIP_MY = 0;
     int MSG_HOME_OWNERSHIP_OTHER = 1;
+    int MSG_NO_SAVE = 0;
+    int MSG_MY_SAVE = 1;
+    int MSG_OTHER_SAVE = 1;
 
     int INPUT_BT_ADDRESS_REQUESTCODE = 1000;
     int INPUT_BT_ADDRESS_RESULTCODE = 1001;

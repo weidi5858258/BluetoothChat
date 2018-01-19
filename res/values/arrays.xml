@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Discoverable mode timeout options -->
+    <string-array name="bluetooth_visibility_timeout_entries">
+        <item msgid="8151962652413645395">"2 分钟"</item>
+        <item msgid="8675215713017289017">"5 分钟"</item>
+        <item msgid="477015974247590543">"1 小时"</item>
+        <item msgid="5198271470953124739">"永不超时"</item>
+    </string-array>
+
+</resources>

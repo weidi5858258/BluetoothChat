@@ -3,6 +3,7 @@ package com.weidi.bluetoothchat.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -24,6 +25,10 @@ public class DevicesActivity extends BaseActivity {
 
     @InjectView(R.id.bt_switch)
     public Switch bt_switch;
+
+    @InjectView(R.id.bt_address_tv)
+    public TextView bt_address_tv;
+
     @InjectView(R.id.as_service_btn)
     public Button as_service_btn;
     @InjectView(R.id.search_device_btn)
@@ -50,12 +55,25 @@ public class DevicesActivity extends BaseActivity {
     public Button chat_btn;
     @InjectView(R.id.input_btn)
     public Button input_btn;
+    @InjectView(R.id.cs_btn)
+    public Button cs_btn;
+
+    // test
+    @InjectView(R.id.test1_btn)
+    public Button test1_btn;
+    @InjectView(R.id.test2_btn)
+    public Button test2_btn;
+    @InjectView(R.id.test3_btn)
+    public Button test3_btn;
+    @InjectView(R.id.test4_btn)
+    public Button test4_btn;
+
     @InjectView(R.id.process_bar)
     public ProgressBar process_bar;
     @InjectView(R.id.bt_status_text)
     public TextView bt_status_text;
-    @InjectView(R.id.bluetooth_device_list)
-    public ListView bluetooth_device_list;
+    @InjectView(R.id.bluetooth_device_recyclerview)
+    public RecyclerView bluetooth_device_recyclerview;
 
     private DevicesActivityController mDevicesActivityController;
 
@@ -82,15 +100,16 @@ public class DevicesActivity extends BaseActivity {
             R.id.cancel_search_btn, R.id.reset_btn, R.id.disconnect_btn,
             R.id.pair_btn, R.id.disconnect_pair_btn, R.id.cancel_pair_btn,
             R.id.check_state_btn, R.id.connect_btn, R.id.chat_btn,
-            R.id.input_btn})
+            R.id.input_btn, R.id.cs_btn,
+            R.id.test1_btn, R.id.test2_btn, R.id.test3_btn, R.id.test4_btn})
     public void onClick(View view) {
         mDevicesActivityController.onClick(view);
     }
 
-    @InjectOnItemClick(R.id.bluetooth_device_list)
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        mDevicesActivityController.onItemClick(parent, view, position, id);
-    }
+    //    @InjectOnItemClick(R.id.bluetooth_device_recyclerview)
+    //    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    //        mDevicesActivityController.onItemClick(parent, view, position, id);
+    //    }
 
     @Override
     public void onBackPressed() {

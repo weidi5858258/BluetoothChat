@@ -2,18 +2,11 @@ package com.weidi.customadapter.interfaces;
 
 import java.util.List;
 
-/**
- * Select, insert, update, delete.
- * <p>
- * Created by Cheney on 16/4/1.
- */
 public interface CRUD<T> {
+
     void add(T item);
 
     void add(int location, T item);
-
-    @Deprecated
-    void insert(int location, T item);
 
     void addAll(List<T> items);
 
@@ -40,4 +33,5 @@ public interface CRUD<T> {
     void clear();
 
     void diff(DefaultDiffCallback<T> callback);
+
 }

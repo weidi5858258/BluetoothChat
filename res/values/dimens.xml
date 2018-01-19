@@ -643,4 +643,6 @@
     <dimen name="head_image_height">120dp</dimen>
 
     <dimen name="common_choose_layout_item_height">60dp</dimen>
+
+    <dimen name="action_bar_switch_padding">16dip</dimen>
 </resources>

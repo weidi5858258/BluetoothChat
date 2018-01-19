@@ -1,209 +1,370 @@
 package com.weidi.customadapter;
 
 import android.content.Context;
-import android.database.DataSetObservable;
-import android.database.DataSetObserver;
+import android.os.AsyncTask;
+import android.support.annotation.LayoutRes;
+import android.support.annotation.Nullable;
+import android.support.v7.util.DiffUtil;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.ListAdapter;
-import android.widget.ListView;
-import android.widget.SpinnerAdapter;
 
+import com.weidi.customadapter.interfaces.CRUD;
+import com.weidi.customadapter.interfaces.DefaultDiffCallback;
 import com.weidi.customadapter.interfaces.IMultiItemViewType;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
- * Bridge adapter for {@link android.widget.BaseAdapter} supporting.
- * <p>
- * Created by Cheney on 16/6/28.
+ * 构造器必须要调用一下父类
+ *
+ * @param <T>
  */
-abstract class CustomListViewAdapter<T> extends CustomRecyclerViewAdapter<T>
-        implements
-        ListAdapter,
-        SpinnerAdapter {
+public abstract class CustomListViewAdapter<T> extends ListViewAdapter<T> implements CRUD<T> {
 
-    private AbsListView mAbsListView;
+    private static final String TAG = "CustomListViewAdapter";
 
-    private DataSetObservable mDataSetObservable = new DataSetObservable();
+    private LayoutInflater mLayoutInflater;
 
-    public CustomListViewAdapter(Context context, List<T> list, int layoutResId) {
-        super(context, list, layoutResId);
-    }
-
-    public CustomListViewAdapter(Context context, List<T> list, IMultiItemViewType<T>
-            mulItemViewType) {
-        super(context, list, mulItemViewType);
+    /**
+     * Constructor for single itemView type.
+     */
+    public CustomListViewAdapter(
+            Context context,
+            List<T> items,
+            int layoutResId) {
+        super(context, items, layoutResId);
+        this.mLayoutInflater = LayoutInflater.from(context);
     }
 
     /**
-     * @see android.widget.BaseAdapter#areAllItemsEnabled().
+     * Constructor for multiple itemView types.
      */
-    @Override
-    public boolean areAllItemsEnabled() {
-        return true;
-    }
-
-    /**
-     * @see android.widget.BaseAdapter#isEnabled(int).
-     */
-    @Override
-    public boolean isEnabled(int position) {
-        return true;
+    public CustomListViewAdapter(
+            Context context,
+            List<T> items,
+            IMultiItemViewType<T> mulItemViewType) {
+        super(context, items, mulItemViewType);
+        this.mLayoutInflater = LayoutInflater.from(context);
     }
 
     @Override
-    public View getDropDownView(int position, View convertView, ViewGroup parent) {
-        return getView(position, convertView, parent);
-    }
-
-    @Override
-    public void registerDataSetObserver(DataSetObserver observer) {
-        mDataSetObservable.registerObserver(observer);
-    }
-
-    @Override
-    public void unregisterDataSetObserver(DataSetObserver observer) {
-        mDataSetObservable.unregisterObserver(observer);
-    }
-
-    public void notifyDataSetHasChanged() {
-        if (mRecyclerView == null)
-            mDataSetObservable.notifyChanged();
-    }
-
-    public void notifyDataSetInvalidated() {
-        if (mRecyclerView == null)
-            mDataSetObservable.notifyInvalidated();
-    }
-
-    /**
-     * @see android.widget.BaseAdapter#getCount().
-     */
-    @Override
-    public int getCount() {
-        return mData == null ? 0 : mData.size();
-    }
-
-    /**
-     * @see android.widget.BaseAdapter#getItem(int).
-     */
-    @Override
-    public T getItem(int position) {
-        if (position >= mData.size())
-            return null;
-        return mData.get(position);
-    }
-
-    /**
-     * @see android.widget.BaseAdapter#getItemId(int).
-     */
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
-
-    /**
-     * @see android.widget.BaseAdapter#getView(int, View, ViewGroup)
-     */
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        if (mAbsListView == null && parent instanceof AbsListView) {
-            mAbsListView = (AbsListView) parent;
+    public CustomViewHolder onCreate(@Nullable View convertView, ViewGroup parent, int viewType) {
+        @LayoutRes int resource;
+        if (mMultiItemViewType != null) {
+            resource = mMultiItemViewType.getLayoutId(viewType);
+        } else {
+            resource = mLayoutResId;
         }
-        CustomViewHolder holder = onCreate(convertView, parent, getItemViewType(position));
-        T item = getItem(position);
-        onBind(holder, getItemViewType(position), position, item);
-        addLoadAnimation(holder); // Load animation
-        return holder.itemView;
+        return CustomViewHolder.get(
+                convertView,
+                convertView == null ? mLayoutInflater.inflate(resource, parent, false) : null);
     }
 
     /**
-     * Note that you must override this method if using <code>ListView</code> with multiple item
-     * types.
-     * <p>
-     * 在使用ListView的多布局的情况下,你必须重写此方法,因为ListView和RV的实现机制不同。
+     * ------------------------------------ CRUD ------------------------------------
+     */
+
+    @Override
+    public final void add(T item) {
+        //        mData.add(item);
+        //        int location = mData.size() - 1;
+        //        if (hasHeaderView()) {
+        //            ++location;
+        //        }
+
+        if (hasFooterView()) {
+            View footerView = getFooterView();
+            if (removeFooterView()) {
+                mData.add(item);
+                addFooterView(footerView);
+            }
+        } else {
+            mData.add(item);
+        }
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public void add(int location, T item) {
+        //        mData.add(location, item);
+        //        if (hasHeaderView()) {
+        //            ++location;
+        //        }
+
+        int count = getCount();
+        if (location < 0 || location > count - 1) {
+            Log.d(TAG, "");
+            return;
+        }
+
+        if (!hasHeaderView() && !hasFooterView()) {
+            mData.add(location, item);
+        } else if (!hasHeaderView() && hasFooterView()) {
+            if (location == count - 1) {
+                View footerView = getFooterView();
+                if (removeFooterView()) {
+                    mData.add(location, item);
+                    addFooterView(footerView);
+                }
+            } else {
+                mData.add(location, item);
+            }
+        } else if (hasHeaderView() && !hasFooterView()) {
+            if (location == 0) {
+                View headerView = getHeaderView();
+                if (removeHeaderView()) {
+                    mData.add(location, item);
+                    addHeaderView(headerView);
+                }
+            } else {
+                mData.add(location, item);
+            }
+        } else if (hasHeaderView() && hasFooterView()) {
+            if (location == 0) {
+                View headerView = getHeaderView();
+                if (removeHeaderView()) {
+                    mData.add(location, item);
+                    addHeaderView(headerView);
+                }
+            } else if (location == count - 1) {
+                View footerView = getFooterView();
+                if (removeFooterView()) {
+                    mData.add(location, item);
+                    addFooterView(footerView);
+                }
+            } else {
+                mData.add(location, item);
+            }
+        }
+
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public final void addAll(List<T> items) {
+        if (items == null || items.isEmpty()) {
+            Log.w(TAG, "addAll: The list you passed contains no elements.");
+            return;
+        }
+        int location = mData.size();
+        mData.addAll(items);
+        if (hasHeaderView()) {
+            ++location;
+        }
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public void addAll(int location, List<T> items) {
+        if (items == null || items.isEmpty()) {
+            Log.w(TAG, "addAll: The list you passed contains no elements.");
+            return;
+        }
+        if (location < 0 || location > getCount()) {
+            Log.w(TAG, "addAll: IndexOutOfBoundsException");
+            return;
+        }
+        mData.addAll(location, items);
+        if (hasHeaderView()) {
+            ++location;
+        }
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public final void remove(T item) {
+        if (contains(item)) {
+            remove(mData.indexOf(item));
+        }
+    }
+
+    @Override
+    public final void remove(int location) {
+        mData.remove(location);
+        if (hasHeaderView()) {
+            ++location;
+        }
+        notifyDataSetChanged();
+    }
+
+    /**
+     * 待测试
      *
-     * @see android.widget.BaseAdapter#getItemViewType(int).
+     * @param start
+     * @param end
      */
+    public void remove(int start, int end) {
+        if (start > end || start < 0 || end > getCount() - 1) {
+            Log.d(TAG, "到CustomListViewAdapter类中查看参数是否正确1.");
+            return;
+        }
+        int deletePosition = -1;
+        if (start == end) {
+            deletePosition = start;
+        }
+
+        if (start == 0 && hasHeaderView()) {
+            start = 1;
+        }
+        if (end == getCount() - 1 && hasFooterView()) {
+            end = getCount() - 2;
+        }
+        if (start > end) {
+            Log.d(TAG, "到CustomListViewAdapter类中查看参数是否正确2.");
+            return;
+        }
+
+        Iterator<T> iter = mData.iterator();
+        int deleteIndex = 0;
+
+        while (iter.hasNext()) {
+            int index = deleteIndex++;
+            if (index >= start && index <= end) {
+                iter.next();
+                iter.remove();
+            } else {
+                break;
+            }
+        }
+
+        notifyDataSetChanged();
+    }
+
     @Override
-    public int getItemViewType(int position) {
-        return super.getItemViewType(position);
+    public void removeAll(List<T> items) {
+        mData.removeAll(items);
+        notifyDataSetChanged(); // RecyclerView
+        notifyDataSetChanged(); // AdapterView
+    }
+
+    @Override
+    public void retainAll(List<T> items) {
+        mData.retainAll(items);
+        notifyDataSetChanged(); // RecyclerView
+        notifyDataSetChanged(); // AdapterView
+    }
+
+    @Override
+    public final void set(T oldItem, T newItem) {
+        set(mData.indexOf(oldItem), newItem);
+    }
+
+    @Override
+    public final void set(int location, T item) {
+        mData.set(location, item);
+        if (hasHeaderView()) {
+            ++location;
+        }
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public final void replaceAll(List<T> items) {
+        if (mData == items) {
+            notifyDataSetChanged();
+            notifyDataSetChanged();
+            return;
+        }
+        if (items == null || items.isEmpty()) {
+            clear();
+            return;
+        }
+        if (mData.isEmpty()) {
+            addAll(items);
+        } else {
+            int start = hasHeaderView() ? 1 : 0;
+            int originalSize = getCount();
+            int newSize = items.size();
+            mData.clear();
+            mData.addAll(items);
+            if (originalSize > newSize) {
+                //                notifyItemRangeChanged(start, newSize);
+                //                notifyItemRangeRemoved(start + newSize, originalSize - newSize);
+            } else if (originalSize == newSize) {
+                //                notifyItemRangeChanged(start, newSize);
+            } else {
+                //                notifyItemRangeChanged(start, originalSize);
+                //                notifyItemRangeInserted(start + originalSize, newSize -
+                // originalSize);
+            }
+            notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public final boolean contains(T item) {
+        return mData.contains(item);
+    }
+
+    @Override
+    public boolean containsAll(List<T> items) {
+        return mData.containsAll(items);
+    }
+
+    @Override
+    public final void clear() {
+        int count = getCount();
+        if (count > 0) {
+            mData.clear();
+            //            notifyItemRangeRemoved(hasHeaderView() ? 1 : 0, count);
+            notifyDataSetChanged();
+        }
     }
 
     /**
-     * @see android.widget.BaseAdapter#getViewTypeCount().
+     * Calculate the difference between two lists and output a list of update operations
+     * that converts the first list into the second one.
+     * <pre>
+     *     List oldList = mAdapter.getData();
+     *     DefaultDiffCallback<T> callback = new DefaultDiffCallback(oldList, newList);
+     *     mAdapter.diff(callback);
+     * </pre>
+     * Note: This method only works on revision 24.2.0 or above.
+     *
+     * @param callback {@link DefaultDiffCallback}
      */
     @Override
-    public int getViewTypeCount() {
-        if (mMultiItemViewType != null)
-            return mMultiItemViewType.getViewTypeCount();
-        return 1;
-    }
+    public void diff(final DefaultDiffCallback<T> callback) {
+        if (checkDiff(callback)) {
+            new AsyncTask<Void, Void, DiffUtil.DiffResult>() {
+                @Override
+                protected DiffUtil.DiffResult doInBackground(Void... params) {
+                    return DiffUtil.calculateDiff(callback);
+                }
 
-    /**
-     * @see android.widget.BaseAdapter#isEmpty().
-     */
-    @Override
-    public boolean isEmpty() {
-        return getCount() == 0;
-    }
-
-
-    @Override
-    public void addHeaderView(View header) {
-        if (mAbsListView != null && mAbsListView instanceof ListView) {
-            ((ListView) mAbsListView).addHeaderView(header);
-            mHeaderView = header;
-        } else {
-            super.addHeaderView(header);
+                @Override
+                protected void onPostExecute(DiffUtil.DiffResult diffResult) {
+                    setData(callback.getNewList());
+                    if (diffResult != null) {
+                        //                        diffResult.dispatchUpdatesTo
+                        // (CustomListViewAdapter.this);
+                    }
+                }
+            }.execute();
         }
     }
 
-    @Override
-    public boolean removeHeaderView() {
-        if (mAbsListView != null && mAbsListView instanceof ListView) {
-            return ((ListView) mAbsListView).removeHeaderView(mHeaderView);
-        } else {
-            return super.removeHeaderView();
-        }
-    }
+    private boolean checkDiff(DiffUtil.Callback callback) {
+        //        if (mRecyclerView == null) {
+        //            throw new IllegalStateException("'diff(DefaultDiffCallback)' only works
+        // with " +
+        //                    "RecyclerView");
+        //        }
 
-    @Override
-    public boolean hasHeaderView() {
-        if (mAbsListView != null && mAbsListView instanceof ListView) {
-            return ((ListView) mAbsListView).getHeaderViewsCount() > 0;
-        } else {
-            return super.hasHeaderView();
+        if (callback == null || callback.getNewListSize() < 1) {
+            Log.w(TAG, "Invalid size of the new list.");
+            return false;
         }
-    }
 
-    @Override
-    public void addFooterView(View footer) {
-        if (mAbsListView != null && mAbsListView instanceof ListView) {
-            ((ListView) mAbsListView).addFooterView(footer);
-            mFooterView = footer;
-        } else {
-            super.addFooterView(footer);
-        }
-    }
-
-    @Override
-    public boolean removeFooterView() {
-        if (mAbsListView != null && mAbsListView instanceof ListView) {
-            return ((ListView) mAbsListView).removeFooterView(mFooterView);
-        } else {
-            return super.removeFooterView();
-        }
-    }
-
-    @Override
-    public boolean hasFooterView() {
-        if (mAbsListView != null && mAbsListView instanceof ListView) {
-            return ((ListView) mAbsListView).getFooterViewsCount() > 0;
-        } else {
-            return super.hasFooterView();
+        try {
+            Class.forName("android.support.v7.util.DiffUtil");
+            return true;
+        } catch (ClassNotFoundException e) {
+            Log.e(TAG, "This method only works on revision 24.2.0 or above.", e);
+            return false;
         }
     }
 

@@ -1,13 +1,13 @@
 package com.weidi.bluetoothchat.modle;
 
-import com.weidi.bluetoothchat.dbutil.DbVersion;
-import com.weidi.bluetoothchat.dbutil.Primary;
+import com.weidi.dbutil.ClassVersion;
+import com.weidi.dbutil.Primary;
 
 /**
  * Created by root on 16-12-23.
  */
 
-@DbVersion(version = 2)
+@ClassVersion(version = 2)
 public class BTDevice {
 
     public int _id;

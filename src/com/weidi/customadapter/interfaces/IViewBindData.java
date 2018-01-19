@@ -4,12 +4,14 @@ import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.weidi.customadapter.CustomViewHolder;
+
 /**
- * Create and bind data to item view.
- * <p>
- * Created by Cheney on 16/3/31.
+ *
+ * @param <T> javabean
+ * @param <CustomViewHolder>
  */
-public interface IViewBindData<T, K> {
+public interface IViewBindData<T, CustomViewHolder> {
 
     /**
      * @param convertView Support by {@link ListSupportAdapter#getView(int, View, ViewGroup)}.
@@ -17,7 +19,7 @@ public interface IViewBindData<T, K> {
      * @param viewType    Choose the layout resource according to view type.
      * @return Created view holder.
      */
-    K onCreate(@Nullable View convertView, ViewGroup parent, int viewType);
+    CustomViewHolder onCreate(@Nullable View convertView, ViewGroup parent, int viewType);
 
     /**
      * Method for binding data to view.
@@ -27,6 +29,6 @@ public interface IViewBindData<T, K> {
      * @param layoutPosition position
      * @param item           data
      */
-    void onBind(K holder, int viewType, int layoutPosition, T item);
+    void onBind(CustomViewHolder holder, int viewType, int layoutPosition, T item);
 
 }

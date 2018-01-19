@@ -102,7 +102,7 @@ public class InjectUtils {
             Method setContentView = cls.getMethod("setContentView", int.class);
             // 调用setContentView()方法
             setContentView.invoke(activity, layoutResID);
-            Log.d(TAG, "injectLayout():activity = "+activity+" layoutResID = "+layoutResID);
+//            Log.d(TAG, "injectLayout():activity = "+activity+" layoutResID = "+layoutResID);
         } catch (Exception e) {
             Log.e(TAG, "xml文件中可能自定义布局的包名没有更换或者有其他问题,请去查看!!!");
             e.printStackTrace();
@@ -149,7 +149,7 @@ public class InjectUtils {
                     return;
                 }
                 field.set(object, resView);// 给属性设置为这个资源值
-                Log.d(TAG, "injectView():object = "+object+" field.name = "+field.getName());
+//                Log.d(TAG, "injectView():object = "+object+" field.name = "+field.getName());
             }
         } catch (Exception e) {
             e.printStackTrace();

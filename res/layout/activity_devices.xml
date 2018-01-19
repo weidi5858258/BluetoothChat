@@ -10,6 +10,15 @@
               android:paddingTop="@dimen/activity_vertical_margin"
               tools:context=".activity.DevicesActivity">
 
+    <TextView
+        android:id="@+id/bt_address_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:layout_marginBottom="10dp"
+        android:textColor="@android:color/holo_blue_bright"
+        android:visibility="visible"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -142,6 +151,7 @@
             android:text="手动\n输入"/>
 
         <Button
+            android:id="@+id/cs_btn"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -149,6 +159,7 @@
             android:text="预留"/>
 
         <Button
+            android:id="@+id/test1_btn"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -156,6 +167,7 @@
             android:text="预留"/>
 
         <Button
+            android:id="@+id/test2_btn"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -163,6 +175,7 @@
             android:text="预留"/>
 
         <Button
+            android:id="@+id/test3_btn"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -170,6 +183,7 @@
             android:text="预留"/>
 
         <Button
+            android:id="@+id/test4_btn"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -211,10 +225,15 @@
 
     </RelativeLayout>
 
-    <ListView
-        android:id="@+id/bluetooth_device_list"
+    <!--<ListView-->
+        <!--android:id="@+id/bluetooth_device_recyclerview"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="0dp"-->
+        <!--android:layout_weight="1"/>-->
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/bluetooth_device_recyclerview"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_height="match_parent"/>
 
 </LinearLayout>

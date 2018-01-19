@@ -1,426 +1,292 @@
 package com.weidi.customadapter;
 
-import android.animation.Animator;
 import android.content.Context;
-import android.os.Build;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.os.AsyncTask;
+import android.support.annotation.LayoutRes;
+import android.support.annotation.Nullable;
+import android.support.v7.util.DiffUtil;
 import android.util.Log;
-import android.view.MotionEvent;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Interpolator;
-import android.view.animation.LinearInterpolator;
-import android.widget.AdapterView;
 
-import com.weidi.customadapter.animation.AlphaInAnimation;
-import com.weidi.customadapter.animation.BaseAnimation;
-import com.weidi.customadapter.interfaces.IAnimation;
-import com.weidi.customadapter.interfaces.IHeaderFooter;
-import com.weidi.customadapter.interfaces.ILayoutManager;
+import com.weidi.customadapter.interfaces.CRUD;
+import com.weidi.customadapter.interfaces.DefaultDiffCallback;
 import com.weidi.customadapter.interfaces.IMultiItemViewType;
-import com.weidi.customadapter.interfaces.IViewBindData;
-import com.weidi.customadapter.listener.OnItemClickListener;
-import com.weidi.customadapter.listener.OnItemLongClickListener;
-import com.weidi.customadapter.listener.OnItemTouchListener;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Base adapter.
+ * 构造器必须要调用一下父类
  * <p>
- * Created by Cheney on 16/3/30.
+ * recyclerView.setLayoutManager(new LinearLayoutManager(context));
+ * recyclerView.setLayoutManager(
+ * new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+ *
+ * @param <T> javaBean
  */
-abstract class CustomRecyclerViewAdapter<T> extends RecyclerView.Adapter<CustomViewHolder>
+public abstract class CustomRecyclerViewAdapter<T> extends RecyclerViewAdapter<T>
         implements
-        IViewBindData<T, CustomViewHolder>,
-        IAnimation,
-        ILayoutManager,
-        IHeaderFooter {
+        CRUD<T> {
 
     private static final String TAG = "CustomRecyclerViewAdapter";
 
-    protected final Context mContext;
-    protected List<T> mData;
-
-    protected int mLayoutResId;
-    protected IMultiItemViewType<T> mMultiItemViewType;
-
-    private OnItemClickListener mOnItemClickListener;
-    private OnItemLongClickListener mOnItemLongClickListener;
-    private OnItemTouchListener mOnItemTouchListener;
-
-    protected RecyclerView mRecyclerView;
-
-    private final int TYPE_HEADER = -0x100;
-    private final int TYPE_FOOTER = -0x101;
-    protected View mHeaderView;
-    protected View mFooterView;
-
-    private Interpolator mInterpolator = new LinearInterpolator();
-    private long mDuration = 300;
-    private boolean mLoadAnimationEnabled;
-    private boolean mOnlyOnce = true;
-    private BaseAnimation mLoadAnimation;
-    private int mLastPosition = -1;
+    private LayoutInflater mLayoutInflater;
 
     /**
-     * Constructor for single item view type.
-     *
-     * @param context     Context.
-     * @param list        Data list.
-     * @param layoutResId {@link android.support.annotation.LayoutRes}
+     * Constructor for single itemView type.
      */
     public CustomRecyclerViewAdapter(
             Context context,
-            List<T> list,
+            List<T> items,
             int layoutResId) {
-        this.mContext = context;
-        this.mData = list == null ? new ArrayList<T>() : list;
-        this.mLayoutResId = layoutResId;
-        this.mMultiItemViewType = null;
+        super(context, items, layoutResId);
+        this.mLayoutInflater = LayoutInflater.from(context);
     }
 
     /**
-     * Constructor for multiple item view type.
-     *
-     * @param context         Context.
-     * @param list            Data list.
-     * @param mulItemViewType If null, plz override {@link #offerMultiItemViewType()}.
+     * Constructor for multiple itemView types.
      */
     public CustomRecyclerViewAdapter(
             Context context,
-            List<T> list,
+            List<T> items,
             IMultiItemViewType<T> mulItemViewType) {
-        this.mContext = context;
-        this.mData = list == null ? new ArrayList<T>() : list;
-        this.mMultiItemViewType =
-                mulItemViewType == null ? offerMultiItemViewType() : mulItemViewType;
-    }
-
-    @Override
-    public int getItemCount() {
-        int size = mData == null ? 0 : mData.size();
-        if (hasHeaderView()) {
-            ++size;
-        }
-        if (hasFooterView()) {
-            ++size;
-        }
-        return size;
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        int viewType = 0;
-        if (isHeaderView(position)) {
-            viewType = TYPE_HEADER;
-        } else if (isFooterView(position)) {
-            viewType = TYPE_FOOTER;
-        } else {
-            if (mMultiItemViewType != null) {
-                if (hasHeaderView()) {
-                    --position;
-                }
-                return mMultiItemViewType.getItemViewType(position, mData.get(position));
-            }
-            return 0;
-        }
-        return viewType;
-    }
-
-    @Override
-    public CustomViewHolder onCreateViewHolder(ViewGroup parent, final int viewType) {
-        final CustomViewHolder holder;
-        if (viewType == TYPE_HEADER && hasHeaderView()) {
-            return new CustomViewHolder(getHeaderView());
-        } else if (viewType == TYPE_FOOTER && hasFooterView()) {
-            return new CustomViewHolder(getFooterView());
-        } else {
-            holder = onCreate(null, parent, viewType);
-        }
-
-        if (!(holder.itemView instanceof AdapterView)
-                && !(holder.itemView instanceof RecyclerView)) {
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mOnItemClickListener != null) {
-                        mOnItemClickListener.onItemClick(
-                                v,
-                                viewType,
-                                holder.getAdapterPosition());
-                    }
-                }
-            });
-            holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    if (mOnItemLongClickListener != null) {
-                        return mOnItemLongClickListener.onItemLongClick(
-                                v,
-                                viewType,
-                                holder.getAdapterPosition());
-                    }
-                    return false;
-                }
-            });
-            holder.itemView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    if (mOnItemTouchListener != null) {
-                        return mOnItemTouchListener.onItemTouch(
-                                v,
-                                viewType,
-                                holder.getAdapterPosition(),
-                                event);
-                    }
-                    return false;
-                }
-            });
-        }
-        return holder;
-    }
-
-    @Override
-    public void onBindViewHolder(CustomViewHolder holder, int position) {
-        int viewType = getItemViewType(position);
-        if (viewType != TYPE_HEADER && viewType != TYPE_FOOTER) {
-            onBind(holder, viewType, position, mData.get(hasHeaderView() ? --position : position));
-            addLoadAnimation(holder); // Load animation
-        }
-    }
-
-    @Override
-    public void onBindViewHolder(CustomViewHolder holder, int position,
-                                 List<Object> payloads) {
-        super.onBindViewHolder(holder, position, payloads);
-    }
-
-    @Override
-    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
-        if (mRecyclerView != null && mRecyclerView != recyclerView)
-            Log.i(TAG, "Does not support multiple RecyclerViews now.");
-        mRecyclerView = recyclerView;
-        // Ensure a situation that add header or footer before setAdapter().
-        ifGridLayoutManager();
-    }
-
-    @Override
-    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
-        mRecyclerView = null;
-    }
-
-    @Override
-    public void onViewAttachedToWindow(CustomViewHolder holder) {
-        if (isHeaderView(holder.getLayoutPosition()) || isFooterView(holder.getLayoutPosition())) {
-            ViewGroup.LayoutParams lp = holder.itemView.getLayoutParams();
-            if (lp != null && lp instanceof StaggeredGridLayoutManager.LayoutParams) {
-                ((StaggeredGridLayoutManager.LayoutParams) lp).setFullSpan(true);
-            }
-        }
-    }
-
-    public Context getContext() {
-        return mContext;
-    }
-
-    @Deprecated
-    public List<T> getList() {
-        return mData;
-    }
-
-    public List<T> getData() {
-        return mData;
-    }
-
-    public void setData(List<T> data) {
-        mData = data;
-    }
-
-    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
-        this.mOnItemClickListener = onItemClickListener;
-    }
-
-    public void setOnItemLongClickListener(OnItemLongClickListener onItemLongClickListener) {
-        this.mOnItemLongClickListener = onItemLongClickListener;
-    }
-
-    public void setOnItemTouchListener(OnItemTouchListener onItemTouchListener) {
-        this.mOnItemTouchListener = onItemTouchListener;
+        super(context, items, mulItemViewType);
+        this.mLayoutInflater = LayoutInflater.from(context);
     }
 
     /**
-     * @return Offered an {@link IMultiItemViewType} by overriding this method.
+     * 子类不需要再fu写这个方法了
+     * 只要子类根据需要创建不同的构造器,在这里就能得到不同的布局
+     * 如果是多类型的,必须实现IMultiItemViewType接口
+     *
+     * @param convertView
+     * @param parent      Target container(ListView, GridView, RecyclerView,Spinner, etc.).
+     * @param viewType    Choose the layout resource according to view type.
+     * @return
      */
-    protected IMultiItemViewType<T> offerMultiItemViewType() {
-        return null;
+    @Override
+    public CustomViewHolder onCreate(@Nullable View convertView, ViewGroup parent, int viewType) {
+        @LayoutRes int resource;
+        if (mMultiItemViewType != null) {
+            // 根据不同的类型得到不同的而已
+            resource = mMultiItemViewType.getLayoutId(viewType);
+        } else {
+            resource = mLayoutResId;
+        }
+        return CustomViewHolder.get(
+                convertView,
+                convertView == null ? mLayoutInflater.inflate(resource, parent, false) : null);
     }
 
-    @Override
-    public boolean hasLayoutManager() {
-        return mRecyclerView != null && mRecyclerView.getLayoutManager() != null;
-    }
+    //    public abstract void onBind(
+    // CustomViewHolder holder, int viewType, int layoutPosition, T item);
 
-    @Override
-    public RecyclerView.LayoutManager getLayoutManager() {
-        return hasLayoutManager() ? mRecyclerView.getLayoutManager() : null;
-    }
+     //------------------------------------ CRUD ------------------------------------//
 
+    /**
+     * 不能用来加"头"或者"脚"
+     *
+     * @param item
+     */
     @Override
-    public View getHeaderView() {
-        return mHeaderView;
-    }
-
-    @Override
-    public View getFooterView() {
-        return mFooterView;
-    }
-
-    @Override
-    public void addHeaderView(View header) {
-        if (hasHeaderView())
-            throw new IllegalStateException("You have already added a header view.");
-        mHeaderView = header;
-        setLayoutParams(mHeaderView);
-        ifGridLayoutManager();
-        notifyItemInserted(0);
-    }
-
-    @Override
-    public void addFooterView(View footer) {
-        if (hasFooterView())
-            throw new IllegalStateException("You have already added a footer view.");
-        mFooterView = footer;
-        setLayoutParams(mFooterView);
-        ifGridLayoutManager();
-        notifyItemInserted(getItemCount() - 1);
-    }
-
-    @Override
-    public boolean removeHeaderView() {
+    public final void add(T item) {
+        mData.add(item);
+        int location = mData.size() - 1;
         if (hasHeaderView()) {
-            mHeaderView = null;
-            notifyItemRemoved(0);
-            return true;
+            ++location;
         }
-        return false;
+        notifyItemInserted(location);
+        notifyDataSetChanged();
     }
 
     @Override
-    public boolean removeFooterView() {
-        if (hasFooterView()) {
-            int footerPosition = getItemCount() - 1;
-            mFooterView = null;
-            notifyItemRemoved(footerPosition);
-            return true;
+    public void add(int location, T item) {
+        mData.add(location, item);
+        if (hasHeaderView()) {
+            ++location;
         }
-        return false;
+        notifyItemInserted(location);
+        notifyDataSetChanged();
     }
 
     @Override
-    public boolean hasHeaderView() {
-        return getHeaderView() != null;
+    public final void addAll(List<T> items) {
+        if (items == null || items.isEmpty()) {
+            Log.w(TAG, "addAll: The list you passed contains no elements.");
+            return;
+        }
+        int location = mData.size();
+        mData.addAll(items);
+        if (hasHeaderView()) {
+            ++location;
+        }
+        notifyItemRangeInserted(location, items.size());
+        notifyDataSetChanged();
     }
 
     @Override
-    public boolean hasFooterView() {
-        return getFooterView() != null;
+    public void addAll(int location, List<T> items) {
+        if (items == null || items.isEmpty()) {
+            Log.w(TAG, "addAll: The list you passed contains no elements.");
+            return;
+        }
+        if (location < 0 || location > mData.size()) {
+            Log.w(TAG, "addAll: IndexOutOfBoundsException");
+            return;
+        }
+        mData.addAll(location, items);
+        if (hasHeaderView()) {
+            ++location;
+        }
+        notifyItemRangeInserted(location, items.size());
+        notifyDataSetChanged();
     }
 
     @Override
-    public boolean isHeaderView(int position) {
-        return hasHeaderView() && position == 0;
-    }
-
-    @Override
-    public boolean isFooterView(int position) {
-        return hasFooterView() && position == getItemCount() - 1;
-    }
-
-    private void ifGridLayoutManager() {
-        if (hasHeaderView() || hasFooterView()) {
-            final RecyclerView.LayoutManager layoutManager = getLayoutManager();
-            if (layoutManager instanceof GridLayoutManager) {
-                final GridLayoutManager.SpanSizeLookup originalSpanSizeLookup =
-                        ((GridLayoutManager) layoutManager).getSpanSizeLookup();
-                ((GridLayoutManager) layoutManager).setSpanSizeLookup(new GridLayoutManager
-                        .SpanSizeLookup() {
-                    @Override
-                    public int getSpanSize(int position) {
-                        return (isHeaderView(position) || isFooterView(position)) ?
-                                ((GridLayoutManager) layoutManager).getSpanCount() :
-                                originalSpanSizeLookup.getSpanSize(position);
-                    }
-                });
-            }
+    public final void remove(T item) {
+        if (contains(item)) {
+            remove(mData.indexOf(item));
         }
     }
 
-    private void setLayoutParams(View view) {
-        if (hasHeaderView() || hasFooterView()) {
-            RecyclerView.LayoutManager layoutManager = getLayoutManager();
-            if (layoutManager instanceof StaggeredGridLayoutManager) {
-                view.setLayoutParams(new StaggeredGridLayoutManager.LayoutParams(
-                        StaggeredGridLayoutManager.LayoutParams.MATCH_PARENT,
-                        StaggeredGridLayoutManager.LayoutParams.WRAP_CONTENT));
-            } else if (layoutManager instanceof GridLayoutManager) {
-                view.setLayoutParams(new GridLayoutManager.LayoutParams(
-                        GridLayoutManager.LayoutParams.MATCH_PARENT,
-                        GridLayoutManager.LayoutParams.WRAP_CONTENT));
+    @Override
+    public final void remove(int location) {
+        mData.remove(location);
+        if (hasHeaderView()) {
+            ++location;
+        }
+        notifyItemRemoved(location);
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public void removeAll(List<T> items) {
+        mData.removeAll(items);
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public void retainAll(List<T> items) {
+        mData.retainAll(items);
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public final void set(T oldItem, T newItem) {
+        set(mData.indexOf(oldItem), newItem);
+    }
+
+    @Override
+    public final void set(int location, T item) {
+        mData.set(location, item);
+        if (hasHeaderView()) {
+            ++location;
+        }
+        notifyItemChanged(location);
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public final void replaceAll(List<T> items) {
+        if (mData == items) {
+            notifyDataSetChanged();
+            return;
+        }
+        if (items == null || items.isEmpty()) {
+            clear();
+            return;
+        }
+        if (mData.isEmpty()) {
+            addAll(items);
+        } else {
+            int start = hasHeaderView() ? 1 : 0;
+            int originalSize = getItemCount();
+            int newSize = items.size();
+            mData.clear();
+            mData.addAll(items);
+            if (originalSize > newSize) {
+                notifyItemRangeChanged(start, newSize);
+                notifyItemRangeRemoved(start + newSize, originalSize - newSize);
+            } else if (originalSize == newSize) {
+                notifyItemRangeChanged(start, newSize);
             } else {
-                view.setLayoutParams(new RecyclerView.LayoutParams(
-                        RecyclerView.LayoutParams.MATCH_PARENT,
-                        RecyclerView.LayoutParams.WRAP_CONTENT));
+                notifyItemRangeChanged(start, originalSize);
+                notifyItemRangeInserted(start + originalSize, newSize - originalSize);
             }
+            notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public final boolean contains(T item) {
+        return mData.contains(item);
+    }
+
+    @Override
+    public boolean containsAll(List<T> items) {
+        return mData.containsAll(items);
+    }
+
+    @Override
+    public final void clear() {
+        int count = getItemCount();
+        if (count > 0) {
+            mData.clear();
+            notifyItemRangeRemoved(hasHeaderView() ? 1 : 0, count);
+            notifyDataSetChanged();
         }
     }
 
     /**
-     * ------------------------------------ Load animation ------------------------------------
+     * Calculate the difference between two lists and output a list of update operations
+     * that converts the first list into the second one.
+     * <pre>
+     *     List oldList = mAdapter.getData();
+     *     DefaultDiffCallback<T> callback = new DefaultDiffCallback(oldList, newList);
+     *     mAdapter.diff(callback);
+     * </pre>
+     * Note: This method only works on revision 24.2.0 or above.
+     *
+     * @param callback {@link DefaultDiffCallback}
      */
-
     @Override
-    public void enableLoadAnimation() {
-        enableLoadAnimation(mDuration, new AlphaInAnimation());
-    }
-
-    @Override
-    public void enableLoadAnimation(long duration, BaseAnimation animation) {
-        if (duration > 0) {
-            mDuration = duration;
-        } else {
-            Log.w(TAG, "Invalid animation duration");
-        }
-        mLoadAnimationEnabled = true;
-        mLoadAnimation = animation;
-    }
-
-    @Override
-    public void cancelLoadAnimation() {
-        mLoadAnimationEnabled = false;
-        mLoadAnimation = null;
-    }
-
-    @Override
-    public void setOnlyOnce(boolean onlyOnce) {
-        mOnlyOnce = onlyOnce;
-    }
-
-    @Override
-    public void addLoadAnimation(RecyclerView.ViewHolder holder) {
-        if (mLoadAnimationEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            if (!mOnlyOnce || holder.getLayoutPosition() > mLastPosition) {
-                BaseAnimation animation =
-                        mLoadAnimation == null ? new AlphaInAnimation() : mLoadAnimation;
-                for (Animator anim : animation.getAnimators(holder.itemView)) {
-                    anim.setInterpolator(mInterpolator);
-                    anim.setDuration(mDuration).start();
+    public void diff(final DefaultDiffCallback<T> callback) {
+        if (checkDiff(callback)) {
+            new AsyncTask<Void, Void, DiffUtil.DiffResult>() {
+                @Override
+                protected DiffUtil.DiffResult doInBackground(Void... params) {
+                    return DiffUtil.calculateDiff(callback);
                 }
-                mLastPosition = holder.getLayoutPosition();
-            }
+
+                @Override
+                protected void onPostExecute(DiffUtil.DiffResult diffResult) {
+                    setData(callback.getNewList());
+                    if (diffResult != null) {
+                        diffResult.dispatchUpdatesTo(CustomRecyclerViewAdapter.this);
+                    }
+                }
+            }.execute();
+        }
+    }
+
+    private boolean checkDiff(DiffUtil.Callback callback) {
+        if (mRecyclerView == null) {
+            throw new IllegalStateException("'diff(DefaultDiffCallback)' only works with " +
+                    "RecyclerView");
+        }
+
+        if (callback == null || callback.getNewListSize() < 1) {
+            Log.w(TAG, "Invalid size of the new list.");
+            return false;
+        }
+
+        try {
+            Class.forName("android.support.v7.util.DiffUtil");
+            return true;
+        } catch (ClassNotFoundException e) {
+            Log.e(TAG, "This method only works on revision 24.2.0 or above.", e);
+            return false;
         }
     }
 

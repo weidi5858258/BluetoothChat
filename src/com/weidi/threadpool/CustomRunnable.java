@@ -6,24 +6,18 @@ import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 public class CustomRunnable implements java.lang.Runnable {
 
     private static final String TAG = "CustomRunnable";
-    /**
-     * 取消任务：false表示没有取消任务，任务在不断地进行；设为true时表示要取消任务了，不想再进行任务
-     */
-    //    private boolean cancleTask = false;
-    /**  */
-    //    private boolean cancleException = false;
-    /**  */
-    private MHandler mHandler = null;
 
     private static final int RUNBEFORE = 0;
     private static final int RUNAFTER = 1;
     private static final int RUNERROR = 2;
+    private static final int ONPROGRESSUPDATE = 3;
+
+    private InnerHandler mHandler = null;
     private CallBack mCallBack = null;
 
     private int runBeforeSleepTime = 0;
@@ -38,7 +32,12 @@ public class CustomRunnable implements java.lang.Runnable {
         /**
          * 子线程
          */
-        Object running() throws IOException;
+        Object running();
+
+        /**
+         * 主线程
+         */
+        void onProgressUpdate(Object object);
 
         /**
          * 主线程
@@ -56,7 +55,7 @@ public class CustomRunnable implements java.lang.Runnable {
             throw new RuntimeException("CustomRunnable对象的创建不是在主线程中进行!!!");
         }
         if (mHandler == null) {
-            mHandler = new MHandler(this);
+            mHandler = new InnerHandler(this);
         }
     }
 
@@ -69,7 +68,9 @@ public class CustomRunnable implements java.lang.Runnable {
                     SystemClock.sleep(runBeforeSleepTime);
                     runBeforeSleepTime = 0;
                 }
+
                 Object object = mCallBack.running();
+
                 Message msg = mHandler.obtainMessage();
                 msg.what = RUNAFTER;
                 msg.obj = object;
@@ -78,20 +79,18 @@ public class CustomRunnable implements java.lang.Runnable {
                 mHandler.sendEmptyMessage(RUNERROR);
                 Log.e(TAG, "CustomRunnable:run()方法出现异常: " + e);
             } finally {
-//                if (runBeforeSleepTime == 0 && runAfterSleepTime == 0) {
-//                    release();
-//                }
+                //                release();
             }
         }
     }
 
-    /**
-     * 设为false时取消任务正常进行；设为true时取消任务
-     */
-    //    public CustomRunnable setCancleTaskUnit(boolean cancleTask) {
-    //        this.cancleTask = cancleTask;
-    //        return this;
-    //    }
+    public final void publishProgress(Object object) {
+        Message msg = mHandler.obtainMessage();
+        msg.what = ONPROGRESSUPDATE;
+        msg.obj = object;
+        mHandler.sendMessage(msg);
+    }
+
     public CustomRunnable setCallBack(CallBack callBack) {
         mCallBack = callBack;
         return this;
@@ -115,11 +114,11 @@ public class CustomRunnable implements java.lang.Runnable {
         return this;
     }
 
-    private static class MHandler extends Handler {
+    private static class InnerHandler extends Handler {
 
         private WeakReference<CustomRunnable> mCustomRunnable;
 
-        private MHandler(CustomRunnable customRunnable) {
+        private InnerHandler(CustomRunnable customRunnable) {
             mCustomRunnable = new WeakReference<CustomRunnable>(customRunnable);
         }
 
@@ -129,18 +128,25 @@ public class CustomRunnable implements java.lang.Runnable {
             if (customRunnable == null || customRunnable.mCallBack == null) {
                 return;
             }
+
             switch (msg.what) {
                 case RUNBEFORE:
                     customRunnable.mCallBack.runBefore();
+                    customRunnable.runBeforeSleepTime = 0;
                     break;
                 case RUNAFTER:
                     customRunnable.mCallBack.runAfter(msg.obj);
                     customRunnable.runAfterSleepTime = 0;
                     break;
                 case RUNERROR:
+                    customRunnable.mCallBack.runError();
                     customRunnable.runBeforeSleepTime = 0;
                     customRunnable.runAfterSleepTime = 0;
-                    customRunnable.mCallBack.runError();
+                    break;
+                case ONPROGRESSUPDATE:
+                    customRunnable.mCallBack.onProgressUpdate(msg.obj);
+                    break;
+                default:
                     break;
             }
             super.handleMessage(msg);
@@ -152,16 +158,22 @@ public class CustomRunnable implements java.lang.Runnable {
 
     }
 
-
     /**
      直接复制使用
-     ThreadPool.getCachedThreadPool().execute(
-     new CustomRunnable().setCallBack(new CustomRunnable.CallBack() {
+     final CustomRunnable mCustomRunnable = new CustomRunnable();
+     mCustomRunnable.setCallBack(
+     new CustomRunnable.CallBack() {
+
     @Override public void runBefore() {
 
     }
 
-    @Override public Object running() throws IOException {
+    @Override public Object running() {
+
+    return null;
+    }
+
+    @Override public void onProgressUpdate(Object object) {
 
     }
 
@@ -173,7 +185,8 @@ public class CustomRunnable implements java.lang.Runnable {
 
     }
 
-    }));
+    });
+     ThreadPool.getCachedThreadPool().execute(mCustomRunnable);
      */
 
 }

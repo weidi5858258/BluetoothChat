@@ -13,9 +13,8 @@ import android.widget.Adapter;
 import android.widget.ImageView;
 
 /**
- * Some convenient methods called like a chain.
- * <p>
- * Created by Cheney on 16/4/1.
+ * 由CustomViewHolder对象进行调用
+ * 在自定义的Adapter中的onBind()方法中调用这些方法
  */
 public interface IViewSetter<VH> {
 
@@ -59,14 +58,15 @@ public interface IViewSetter<VH> {
 
     VH setTag(int viewId, int key, Object tag);
 
-    VH setEnabled(int viewId, boolean enabled);
-
     VH setAdapter(int viewId, Adapter adapter);
 
     VH setAdapter(int viewId, RecyclerView.Adapter adapter);
 
+    VH setEnabled(int viewId, boolean enabled);
+
     VH setChecked(int viewId, boolean checked);
 
+    // 对Item里面的某个控件设置点击事件
     VH setOnClickListener(int viewId, View.OnClickListener listener);
 
     VH setOnLongClickListener(int viewId, View.OnLongClickListener listener);

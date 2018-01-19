@@ -3,11 +3,6 @@ package com.weidi.customadapter.interfaces;
 
 import android.support.annotation.LayoutRes;
 
-/**
- * Interface for multiple view types.
- * <p>
- * Created by Cheney on 15/11/28.
- */
 public interface IMultiItemViewType<T> {
 
     /**

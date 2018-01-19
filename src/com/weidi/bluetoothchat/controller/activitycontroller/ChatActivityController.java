@@ -44,27 +44,45 @@ public class ChatActivityController extends BaseController {
     private InputMethodManager mInputMethodManager;
 
     public ChatActivityController(ChatActivity activity) {
+        super(activity);
         mChatActivity = activity;
-        mContext = activity.getApplicationContext();
         mChatMessageAdapter = new ChatMessageAdapter(mContext, msgList);
         activity.chatList.setAdapter(mChatMessageAdapter);
         mChatHandler = new ChatHandler(this, Looper.getMainLooper());
         BTController.getInstance().setContext(mContext);
-        if (((BTApplication) mContext.getApplicationContext()).getConnectionType()
-                == Constant.CLIENT
+        if (((BTApplication) mContext.getApplicationContext())
+                .getConnectionType() == Constant.CLIENT
                 && BTClient.getInstance().isConnected()) {
+
             BTClient.getInstance().setHandler(mChatHandler);
         } else if (((BTApplication) mContext.getApplicationContext())
-                .getConnectionType()
-                == Constant.SERVER
+                .getConnectionType() == Constant.SERVER
                 && BTServer.getInstance().getBtSocketList() != null
                 && BTServer.getInstance().getBtSocketList().size() > 0) {
+
             BTServer.getInstance().setHandler(mChatHandler);
+        } else if (((BTApplication) mContext.getApplicationContext())
+                .getConnectionType() == Constant.CS) {
+
+            if (BTClient.getInstance().isConnected()
+                    && BTServer.getInstance().getBtSocketList() != null
+                    && BTServer.getInstance().getBtSocketList().size() > 0) {
+
+                BTClient.getInstance().setHandler(mChatHandler);
+                BTServer.getInstance().setHandler(mChatHandler);
+            } else if (BTClient.getInstance().isConnected()) {
+
+                BTClient.getInstance().setHandler(mChatHandler);
+            } else if (BTServer.getInstance().getBtSocketList() != null
+                    && BTServer.getInstance().getBtSocketList().size() > 0) {
+
+                BTServer.getInstance().setHandler(mChatHandler);
+            }
         }
         mInputMethodManager = (InputMethodManager) activity
                 .getSystemService(Context.INPUT_METHOD_SERVICE);
 
-//        AndroidBug5497Workaround.assistActivity(activity);
+        //        AndroidBug5497Workaround.assistActivity(activity);
     }
 
     @Override
@@ -101,20 +119,39 @@ public class ChatActivityController extends BaseController {
             case R.id.sendmessage_pet:
 
                 break;
-            case R.id.send_btn:
+            case R.id.send_btn:// 发送
                 String content = mChatActivity.mPasteEditText.getText().toString().trim();
                 if (content.length() > 0) {
-                    if (((BTApplication) mContext.getApplicationContext()).getConnectionType()
-                            == Constant.CLIENT
+                    if (((BTApplication) mContext.getApplicationContext())
+                            .getConnectionType() == Constant.CLIENT
                             && BTClient.getInstance().isConnected()) {
-                        BTClient.getInstance().sendMessage(content);
+
+                        BTClient.getInstance().sendMessage(content, false);
                         mChatActivity.mPasteEditText.setText("");
                     } else if (((BTApplication) mContext.getApplicationContext())
-                            .getConnectionType()
-                            == Constant.SERVER
+                            .getConnectionType() == Constant.SERVER
                             && BTServer.getInstance().getBtSocketList() != null
                             && BTServer.getInstance().getBtSocketList().size() > 0) {
-                        BTServer.getInstance().sendMessageAll(content);
+
+                        BTServer.getInstance().sendMessageAll(content, false);
+                        mChatActivity.mPasteEditText.setText("");
+                    } else if (((BTApplication) mContext.getApplicationContext())
+                            .getConnectionType() == Constant.CS) {
+
+                        if (BTClient.getInstance().isConnected()
+                                && BTServer.getInstance().getBtSocketList() != null
+                                && BTServer.getInstance().getBtSocketList().size() > 0) {
+
+                            BTClient.getInstance().sendMessage(content, false);
+                            // BTServer.getInstance().sendMessageAll(content, true);
+                        } else if (BTClient.getInstance().isConnected()) {
+
+                            BTClient.getInstance().sendMessage(content, false);
+                        } else if (BTServer.getInstance().getBtSocketList() != null
+                                && BTServer.getInstance().getBtSocketList().size() > 0) {
+
+                            BTServer.getInstance().sendMessageAll(content, false);
+                        }
                         mChatActivity.mPasteEditText.setText("");
                     } else {
                         showSysMsg("与远程设备已断开连接");
@@ -147,6 +184,10 @@ public class ChatActivityController extends BaseController {
 
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
+    }
+
+    public Context getContext() {
+        return mContext;
     }
 
     //屏幕高度
@@ -246,10 +287,12 @@ public class ChatActivityController extends BaseController {
     public static class ChatHandler extends Handler {
 
         private WeakReference<ChatActivityController> mWeakReference;
+        private Context mContext;
 
         private ChatHandler(ChatActivityController controller, Looper looper) {
             super(looper);
             mWeakReference = new WeakReference<ChatActivityController>(controller);
+            mContext = controller.getContext();
         }
 
         @Override
@@ -278,6 +321,10 @@ public class ChatActivityController extends BaseController {
                 case 6:
                     break;
             }
+        }
+
+        public Context getContext() {
+            return mContext;
         }
 
     }

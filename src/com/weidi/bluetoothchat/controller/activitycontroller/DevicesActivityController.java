@@ -9,25 +9,29 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.v7.widget.LinearLayoutManager;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.CompoundButton;
 
 import com.weidi.bluetoothchat.BTApplication;
 import com.weidi.bluetoothchat.Constant;
 import com.weidi.bluetoothchat.R;
+import com.weidi.bluetoothchat.activity.BluetoothDeviceListActivity;
 import com.weidi.bluetoothchat.activity.ChatActivity;
 import com.weidi.bluetoothchat.activity.DevicesActivity;
 import com.weidi.bluetoothchat.adapter.DevicesAdapter;
 import com.weidi.bluetoothchat.controller.bluetoothcontroller.BTClient;
 import com.weidi.bluetoothchat.controller.bluetoothcontroller.BTController;
 import com.weidi.bluetoothchat.controller.bluetoothcontroller.BTServer;
-import com.weidi.bluetoothchat.dbutil.BaseDaoImpl;
+import com.weidi.bluetoothchat.fragment.BluetoothDeviceListPreferenceFragment;
 import com.weidi.bluetoothchat.fragment.InputBTAddressDialogFragment;
 import com.weidi.bluetoothchat.listener.OnResultListener;
 import com.weidi.bluetoothchat.modle.BTDevice;
+import com.weidi.customadapter.listener.OnItemClickListener;
+import com.weidi.dbutil.SimpleDao;
 import com.weidi.threadpool.ThreadPool;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -41,7 +45,7 @@ import static com.weidi.bluetoothchat.Constant.FIXEDTHREADPOOLCOUNT;
 
 public class DevicesActivityController extends BaseController {
 
-    private static final String TAG = "DevicesActivityController";
+    private static final String TAG = "BluetoothDeviceListPreferenceFragmentController";
     private DevicesActivity mDevicesActivity;
     //    private Context mContext;
     private DevicesAdapter mDevicesAdapter;
@@ -49,14 +53,15 @@ public class DevicesActivityController extends BaseController {
     private BluetoothDevice mBluetoothDevice;
     //    private BTDevice mBTDevice;
     private MHandler mMHandler;
-    private BaseDaoImpl mBaseDaoImpl;
+
+    private static int canSaveMyMsgType = 0;
+    private static int canSaveOtherMsgType = 0;
 
     public DevicesActivityController(DevicesActivity activity) {
+        super(activity);
         mDevicesActivity = activity;
-        mContext = activity.getApplicationContext();
         mMHandler = new MHandler(this, Looper.getMainLooper());
         BTController.getInstance().setContext(mContext);
-        mBaseDaoImpl = new BaseDaoImpl(mContext);
     }
 
     @Override
@@ -83,7 +88,10 @@ public class DevicesActivityController extends BaseController {
     public void onDestroy() {
         hasItemClick = false;
         BTController.getInstance().unRegisterBluetoothReceiver(mContext);
+        BTController.getInstance().cancelScanDevice();
         reset();
+        canSaveMyMsgType = 0;
+        canSaveOtherMsgType = 0;
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -99,40 +107,47 @@ public class DevicesActivityController extends BaseController {
             showInfo("请先开启蓝牙");
             return;
         }
-        if (!mDevicesActivity.as_service_btn.isClickable()
-                && view.getId() != R.id.search_device_btn
-                && view.getId() != R.id.be_searched_btn
-                && view.getId() != R.id.reset_btn
-                && view.getId() != R.id.chat_btn) {
-            showInfo("本机已作为服务端,除了\n" +
-                    "\"主查\"或者\"被查\"或者\"重置\"或者\"聊天\"\n" +
-                    "不能再进行其他操作");
-            return;
-        }
-        if (!mDevicesActivity.connect_btn.isClickable()
-                && (view.getId() == R.id.as_service_btn
-                || view.getId() == R.id.search_device_btn   // 这个还不能确定能不能操作
-                || view.getId() == R.id.be_searched_btn)) { // 这个还不能确定能不能操作
-            showInfo("请\"重置\"后再操作");
-            return;
-        }
-        if (mBluetoothDevice != null
-                && mBluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDING
-                && (view.getId() == R.id.as_service_btn
-                || view.getId() == R.id.search_device_btn
-                || view.getId() == R.id.be_searched_btn)) {
-            showInfo("请稍等,正在配对中...");
-            return;
-        }
+        //        if (!mDevicesActivity.as_service_btn.isClickable()
+        //                && view.getId() != R.id.search_device_btn
+        //                && view.getId() != R.id.be_searched_btn
+        //                && view.getId() != R.id.reset_btn
+        //                && view.getId() != R.id.chat_btn) {
+        //            showInfo("本机已作为服务端,除了\n" +
+        //                    "\"主查\"或者\"被查\"或者\"重置\"或者\"聊天\"\n" +
+        //                    "不能再进行其他操作");
+        //            return;
+        //        }
+        //        if (!mDevicesActivity.connect_btn.isClickable()
+        //                && (view.getId() == R.id.as_service_btn
+        //                || view.getId() == R.id.search_device_btn   // 这个还不能确定能不能操作
+        //                || view.getId() == R.id.be_searched_btn)) { // 这个还不能确定能不能操作
+        //            showInfo("请\"重置\"后再操作");
+        //            return;
+        //        }
+        //        if (mBluetoothDevice != null
+        //                && mBluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDING
+        //                && (view.getId() == R.id.as_service_btn
+        //                || view.getId() == R.id.search_device_btn
+        //                || view.getId() == R.id.be_searched_btn)) {
+        //            showInfo("请稍等,正在配对中...");
+        //            return;
+        //        }
         switch (view.getId()) {
             case R.id.as_service_btn:
-                reset();
+                //                reset();
                 showInfo("本机已作为服务端\n正在等待客户端的连接...");
                 setServerButtonDisable();
-                ((BTApplication) mContext.getApplicationContext())
-                        .setConnectionType(Constant.SERVER);
+
+                if (((BTApplication) mContext.getApplicationContext()).getConnectionType() ==
+                        Constant.CLIENT) {
+                    ((BTApplication) mContext.getApplicationContext())
+                            .setConnectionType(Constant.CS);
+                } else {
+                    ((BTApplication) mContext.getApplicationContext())
+                            .setConnectionType(Constant.SERVER);
+                }
                 BTServer.getInstance().setIRemoteConnection(mServerIRemoteConnection);
-                BTClient.getInstance().setRemoteBluetoothSocket(null);
+                //                BTClient.getInstance().setRemoteBluetoothSocket(null);
                 ThreadPool.getFixedThreadPool(FIXEDTHREADPOOLCOUNT).execute(new Runnable() {
                     @Override
                     public void run() {
@@ -146,6 +161,7 @@ public class DevicesActivityController extends BaseController {
                 BTController.getInstance().scanDevice();
                 break;
             case R.id.be_searched_btn:
+                // 在300s内能被其他手机发现
                 Intent discoverableIntent = new Intent(
                         BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
                 discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
@@ -232,17 +248,24 @@ public class DevicesActivityController extends BaseController {
                     showInfo("\"查找\"到设备后\n并选中一个设备再进行操作");
                 }
                 break;
-            // "连接"的话肯定是作为客户端的
             case R.id.connect_btn:
                 if (mBluetoothDevice != null) {
                     if (mBluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
+
+                        if (((BTApplication) mContext.getApplicationContext())
+                                .getConnectionType() == Constant.SERVER) {
+                            ((BTApplication) mContext.getApplicationContext())
+                                    .setConnectionType(Constant.CS);
+                        } else {
+                            ((BTApplication) mContext.getApplicationContext())
+                                    .setConnectionType(Constant.CLIENT);
+                        }
+
                         setConnectButtonDisable();
                         showProgressBar();
                         showInfo("正在连接...");
-                        ((BTApplication) mContext.getApplicationContext())
-                                .setConnectionType(Constant.CLIENT);
-                        BTServer.getInstance().setIRemoteConnection(null);
-                        BTClient.getInstance().setIRemoteConnection(mIRemoteConnection);
+                        //                        BTServer.getInstance().setIRemoteConnection(null);
+                        BTClient.getInstance().setIRemoteConnection(mClientIRemoteConnection);
                         ThreadPool.getCachedThreadPool().execute(new Runnable() {
                             @Override
                             public void run() {
@@ -273,6 +296,7 @@ public class DevicesActivityController extends BaseController {
                 //                }
                 break;
             case R.id.input_btn:
+
                 InputBTAddressDialogFragment fragment = new InputBTAddressDialogFragment();
                 fragment.setOnResultListener(mOnResultListener);
                 Bundle bundle = new Bundle();
@@ -282,29 +306,85 @@ public class DevicesActivityController extends BaseController {
                         mDevicesActivity.getFragmentManager(),
                         "InputBTAddressDialogFragment");
                 break;
+            case R.id.cs_btn:
+
+                mDevicesActivity.startActivity(
+                        new Intent(mDevicesActivity, BluetoothDeviceListActivity.class));
+                mDevicesActivity.enterActivity();
+
+
+                //                if (mBluetoothDevice != null) {
+                //                    if (mBluetoothDevice.getBondState() == BluetoothDevice
+                // .BOND_BONDED) {
+                //                        showProgressBar();
+                //                        showInfo("本机已作为服务端\n正在等待客户端的连接...\n正在连接...");
+                //                        BTServer.getInstance().setIRemoteConnection
+                // (mServerIRemoteConnection);
+                //                        BTClient.getInstance().setIRemoteConnection
+                // (mClientIRemoteConnection);
+                //                        //                        BTClient.getInstance()
+                // .setRemoteBluetoothSocket
+                //                        // (null);
+                //                        ((BTApplication) mContext.getApplicationContext())
+                //                                .setConnectionType(Constant.CS);
+                //                        ThreadPool.getFixedThreadPool(FIXEDTHREADPOOLCOUNT)
+                // .execute(new Runnable() {
+                //                            @Override
+                //                            public void run() {
+                //                                BTServer.getInstance().accept();
+                //                            }
+                //                        });
+                //                        ThreadPool.getCachedThreadPool().execute(new Runnable() {
+                //                            @Override
+                //                            public void run() {
+                //                                BTClient.getInstance().connect(mBluetoothDevice
+                // .getAddress());
+                //                            }
+                //                        });
+                //                    } else {
+                //                        showInfo("跟远程设备\n配对成功后再进行操作");
+                //                    }
+                //                } else {
+                //                    showInfo("\"查找\"到设备后\n并选中一个设备再进行操作");
+                //                }
+                break;
+            case R.id.test1_btn:
+                View headerView = View.inflate(mContext, R.layout.item_bluetooth_device, null);
+                mDevicesAdapter.addHeaderView(headerView);
+                break;
+            case R.id.test2_btn:
+                mDevicesAdapter.removeHeaderView();
+                break;
+            case R.id.test3_btn:
+                headerView = View.inflate(mContext, R.layout.item_bluetooth_device, null);
+                mDevicesAdapter.addFooterView(headerView);
+                break;
+            case R.id.test4_btn:
+                mDevicesAdapter.removeFooterView();
+                break;
             default:
                 break;
         }
     }
 
+    private int position = 0;
+
     private boolean hasItemClick = false;
 
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        hasItemClick = true;
-        hideProgressBar();
-        BTController.getInstance().cancelScanDevice();
-        mBluetoothDevice = btList.get(position);
-        checkState();
-        //        Toast.makeText(mContext,
-        //                mBluetoothDevice.getName(),
-        //                Toast.LENGTH_SHORT).show();
+    //    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    //        hasItemClick = true;
+    //        hideProgressBar();
+    //        BTController.getInstance().cancelScanDevice();
+    //        mBluetoothDevice = btList.get(position);
+    //        checkState();
+    //    }
+
+    public static int getCanSaveMyMsgType() {
+        return canSaveMyMsgType;
     }
 
-    public BaseDaoImpl getBaseDaoImpl() {
-        if (mBaseDaoImpl == null) {
-            mBaseDaoImpl = new BaseDaoImpl(mContext);
-        }
-        return mBaseDaoImpl;
+    public static int getCanSaveOtherMsgType() {
+        return canSaveOtherMsgType;
     }
 
     private void init() {
@@ -317,24 +397,36 @@ public class DevicesActivityController extends BaseController {
                 inin1();
             }
         } else {
-            // 不支持蓝牙设备
+            //
         }
     }
 
     private void inin1() {
+        mDevicesActivity.bt_address_tv.setText(
+                BTController.getInstance().getLocalBluetoothAdress());
         // 注册蓝牙扫描广播
         BTController.getInstance().registerBluetoothReceiver(mContext);
         BTController.getInstance().setIBluetoothAction(mIBluetoothAction);
         btList = new ArrayList<BluetoothDevice>();
-        mDevicesAdapter = new DevicesAdapter(mContext, btList);
-        mDevicesActivity.bluetooth_device_list.setAdapter(mDevicesAdapter);
+        //
+        mDevicesAdapter = new DevicesAdapter(mContext, btList, R.layout.item_bluetooth_device);
+        mDevicesAdapter.setOnItemClickListener(mOnItemClickListener);
+        mDevicesActivity.bluetooth_device_recyclerview.setLayoutManager(
+                new LinearLayoutManager(mContext));
+        //设置条目的间距
+        //        mDevicesActivity.bluetooth_device_recyclerview.addItemDecoration(new
+        // SpaceItemDecoration(5));
+        mDevicesActivity.bluetooth_device_recyclerview.setAdapter(mDevicesAdapter);
+
         mDevicesActivity.bt_switch.setOnCheckedChangeListener(
                 new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         if (isChecked) {
                             // 打开蓝牙
-                            BTController.getInstance().openBluetooth();
+                            if (BTController.getInstance().openBluetooth()) {
+                                showInfo("蓝牙已打开");
+                            }
                         } else {
                             // 关闭蓝牙
                             reset();
@@ -348,7 +440,7 @@ public class DevicesActivityController extends BaseController {
                 @Override
                 public void run() {
                     ArrayList<BTDevice> mDevicesList =
-                            (ArrayList<BTDevice>) getBaseDaoImpl().queryAll(BTDevice.class);
+                            (ArrayList<BTDevice>) SimpleDao.getInstance().queryAll(BTDevice.class);
                     if (mDevicesList == null) {
                         return;
                     }
@@ -395,58 +487,71 @@ public class DevicesActivityController extends BaseController {
      * 客户端 查看跟服务端的连接情况
      */
     private void checkState() {
-        String info = "";
+        StringBuilder info = new StringBuilder("");
+        if (((BTApplication) mContext.getApplicationContext()).getConnectionType()
+                == Constant.CLIENT) {
+            info.append("客户端\n");
+        } else if (((BTApplication) mContext.getApplicationContext()).getConnectionType()
+                == Constant.SERVER) {
+            info.append("服务端\n");
+        } else if (((BTApplication) mContext.getApplicationContext()).getConnectionType()
+                == Constant.CS) {
+            info.append("服务端 + 客户端\n");
+        }
+
         if (mBluetoothDevice != null) {
             if (mBluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-                info = "亲,已经配对\n"
-                        + "蓝牙名称: " + mBluetoothDevice.getName() + "\n"
-                        + "蓝牙地址: " + mBluetoothDevice.getAddress() + "\n"
-                        + "蓝牙状态: " + mBluetoothDevice.getBondState();
+                info.append("亲,已经配对\n");
             } else if (mBluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDING) {
-                info = "亲,正在配对\n"
-                        + "蓝牙名称: " + mBluetoothDevice.getName() + "\n"
-                        + "蓝牙地址: " + mBluetoothDevice.getAddress() + "\n"
-                        + "蓝牙状态: " + mBluetoothDevice.getBondState();
+                info.append("亲,正在配对\n");
             } else if (mBluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
-                info = "亲,没有配对\n"
-                        + "蓝牙名称: " + mBluetoothDevice.getName() + "\n"
-                        + "蓝牙地址: " + mBluetoothDevice.getAddress() + "\n"
-                        + "蓝牙状态: " + mBluetoothDevice.getBondState();
+                info.append("亲,没有配对\n");
             }
+            info.append("蓝牙名称: ");
+            info.append(mBluetoothDevice.getName());
+            info.append("\n");
+            info.append("蓝牙地址: ");
+            info.append(mBluetoothDevice.getAddress());
+            info.append("\n");
+            info.append("蓝牙状态: ");
+            info.append(mBluetoothDevice.getBondState());
         }
-        if (mBluetoothDevice != null) {
-            try {
-                if (((BTApplication) mContext.getApplicationContext()).getConnectionType()
-                        == Constant.CLIENT) {
-                    if (BTClient.getInstance().getRemoteBluetoothSocket().isConnected()) {
-                        info += "\nisConnected() = true";
-                    } else {
-                        info += "\nisConnected() = false";
-                    }
-                } else if (((BTApplication) mContext.getApplicationContext()).getConnectionType()
-                        == Constant.SERVER) {
-                }
-            } catch (Exception e) {
-                info += "\nisConnected() = false";
-            }
-        }
-        showInfo(info);
+
+        showInfo(info.toString());
+        info = null;
     }
 
     private void reset() {
-        mDevicesActivity.reset_btn.setClickable(false);
-        mBluetoothDevice = null;
-        mDevicesAdapter.clear();
-        hideProgressBar();
-        showInfo("");
-        setServerButtonEnable();
-        setConnectButtonEnable();
-        BTClient.getInstance().setIRemoteConnection(null);
-        BTServer.getInstance().setIRemoteConnection(null);
-        BTClient.setBTClientToNull();
-        BTServer.setBTServerToNull();
-        ((BTApplication) mContext.getApplicationContext()).setConnectionType(Constant.NONE);
-        mDevicesActivity.reset_btn.setClickable(true);
+        try {
+            mDevicesActivity.reset_btn.setClickable(false);
+            mBluetoothDevice = null;
+            mDevicesAdapter.clear();
+            hideProgressBar();
+            showInfo("");
+            setServerButtonEnable();
+            setConnectButtonEnable();
+            if (BTClient.getInstance().getRemoteBluetoothSocket() != null) {
+                BTClient.getInstance().getRemoteBluetoothSocket().close();
+            }
+            if (BTServer.getInstance().getBtSocketList() != null) {
+                int size = BTServer.getInstance().getBtSocketList().size();
+                for (int i = 0; i < size; i++) {
+                    BluetoothSocket socket = BTServer.getInstance().getBtSocketList().get(i);
+                    if (socket == null) {
+                        continue;
+                    }
+                    socket.close();
+                }
+            }
+            BTClient.getInstance().setIRemoteConnection(null);
+            BTServer.getInstance().setIRemoteConnection(null);
+            BTClient.setBTClientToNull();
+            BTServer.setBTServerToNull();
+            ((BTApplication) mContext.getApplicationContext()).setConnectionType(Constant.NONE);
+            mDevicesActivity.reset_btn.setClickable(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void showInfo(String info) {
@@ -500,8 +605,15 @@ public class DevicesActivityController extends BaseController {
                     controller.showInfo("连接成功");
                     break;
                 case 1:
-                    ((BTApplication) controller.mContext.getApplicationContext())
-                            .setConnectionType(Constant.NONE);
+                    if (((BTApplication) controller.mContext.getApplicationContext())
+                            .getConnectionType() == Constant.CS) {
+                        ((BTApplication) controller.mContext.getApplicationContext())
+                                .setConnectionType(Constant.SERVER);
+                    } else if (((BTApplication) controller.mContext.getApplicationContext())
+                            .getConnectionType() == Constant.CLIENT) {
+                        ((BTApplication) controller.mContext.getApplicationContext())
+                                .setConnectionType(Constant.NONE);
+                    }
                     BTClient.getInstance().setRemoteBluetoothSocket(null);
                     controller.hideProgressBar();
                     controller.showInfo("与服务端未连接");
@@ -565,12 +677,12 @@ public class DevicesActivityController extends BaseController {
                 ContentValues values = new ContentValues();
                 values.put("remoteDeviceName", device.getName());
                 values.put("remoteDeviceAddress", device.getAddress());
-                values.put("remoteDeviceType", String.valueOf(device.getType()));// device.getType()
-                values.put("remoteDeviceAlias", "device.getAlias()");// device.getAlias()
+                //                values.put("remoteDeviceType", String.valueOf(device.getType()));
+                //                values.put("remoteDeviceAlias", device.getAlias());
                 values.put("remoteDeviceBondState", String.valueOf(device.getBondState()));
                 values.put("remoteDeviceBluetoothClass", device.getBluetoothClass().toString());
 
-                mBaseDaoImpl.add2OrUpdate(
+                SimpleDao.getInstance().add2OrUpdate(
                         BTDevice.class,
                         values,
                         "remoteDeviceAddress",
@@ -581,11 +693,13 @@ public class DevicesActivityController extends BaseController {
 
             if (device.getBondState() == BluetoothDevice.BOND_BONDED
                     && !btList.contains(device)) {
-                mDevicesAdapter.addDevice(0, device);
+                mDevicesAdapter.add(0, device);
+                //                mDevicesAdapter.add(0, device);
                 return;
             }
             if (!btList.contains(device)) {
-                mDevicesAdapter.addDevice(-1, device);
+                mDevicesAdapter.add(device);
+                //                mDevicesAdapter.add(device);
             }
 
         }
@@ -610,43 +724,43 @@ public class DevicesActivityController extends BaseController {
         public void btBondBonded(BluetoothDevice device) {
             hideProgressBar();
             checkState();
-            if (mBaseDaoImpl.isExists(
+            if (SimpleDao.getInstance().isExists(
                     BTDevice.class, "remoteDeviceAddress", device.getAddress())) {
                 ContentValues values = new ContentValues();
                 values.put("remoteDeviceName", device.getName());
                 values.put("remoteDeviceAddress", device.getAddress());
-                values.put("remoteDeviceAlias", "device.getAlias()");// device.getAlias()
-                values.put("remoteDeviceType", String.valueOf(device.getType()));
+                //                values.put("remoteDeviceAlias", device.getAlias());
+                //                values.put("remoteDeviceType", String.valueOf(device.getType()));
                 values.put("remoteDeviceBondState", String.valueOf(device.getBondState()));
                 values.put("remoteDeviceBluetoothClass", device.getBluetoothClass().toString());
-                mBaseDaoImpl.update(
+                SimpleDao.getInstance().update(
                         BTDevice.class, values, "remoteDeviceAddress", device.getAddress());
             }
-            mDevicesAdapter.refresh(mDevicesActivity.bluetooth_device_list, 0, device);
+            mDevicesAdapter.refresh(mDevicesActivity.bluetooth_device_recyclerview, 0, device);
         }
 
         @Override
         public void btBondNone(BluetoothDevice device) {
             hideProgressBar();
             checkState();
-            if (mBaseDaoImpl.isExists(
+            if (SimpleDao.getInstance().isExists(
                     BTDevice.class, "remoteDeviceAddress", device.getAddress())) {
                 ContentValues values = new ContentValues();
                 values.put("remoteDeviceName", device.getName());
                 values.put("remoteDeviceAddress", device.getAddress());
-                values.put("remoteDeviceAlias", "device.getAlias()");// device.getAlias()
-                values.put("remoteDeviceType", String.valueOf(device.getType()));
+                //                values.put("remoteDeviceAlias", device.getAlias());
+                //                values.put("remoteDeviceType", String.valueOf(device.getType()));
                 values.put("remoteDeviceBondState", String.valueOf(device.getBondState()));
                 values.put("remoteDeviceBluetoothClass", device.getBluetoothClass().toString());
-                mBaseDaoImpl.update(
+                SimpleDao.getInstance().update(
                         BTDevice.class, values, "remoteDeviceAddress", device.getAddress());
             }
-            mDevicesAdapter.refresh(mDevicesActivity.bluetooth_device_list, -1, device);
+            mDevicesAdapter.refresh(mDevicesActivity.bluetooth_device_recyclerview, -1, device);
         }
 
     };
 
-    private BTClient.IRemoteConnection mIRemoteConnection =
+    private BTClient.IRemoteConnection mClientIRemoteConnection =
             new BTClient.IRemoteConnection() {
 
                 @Override
@@ -728,6 +842,25 @@ public class DevicesActivityController extends BaseController {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+    };
+
+    private OnItemClickListener mOnItemClickListener = new OnItemClickListener() {
+
+        @Override
+        public void onItemClick(View itemView, int viewType, int position) {
+            //            if (position == 0 && mDevicesAdapter.isHeaderView(position)
+            //                    || (position == mDevicesAdapter.getItemCount() - 1
+            //                    && mDevicesAdapter.isFooterView(position))) {
+            //                return;
+            //            }
+
+            hasItemClick = true;
+            hideProgressBar();
+            BTController.getInstance().cancelScanDevice();
+            mBluetoothDevice = btList.get(position);
+            checkState();
         }
 
     };
