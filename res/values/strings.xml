@@ -1,0 +1,116 @@
+<resources>
+    <!--xlapp-->
+    <string name="app_name">BluetoothChat</string>
+    <string name="rigster_acitvity_tip">我们提供以下帐号供您选择:</string>
+    <string name="prefix_id">ID:</string>
+    <string name="takephoto">拍照</string>
+    <string name="choosephoto">从手机相册选择</string>
+    <string name="refresh_rigster_xlid"><u>换一组试试</u></string>
+    <string name="next">下一步</string>
+    <!--xlapp end-->
+
+
+
+    <string name="text_back">返回</string>
+    <string name="no_msg">暂时没有新消息</string>
+    <string name="text_ack_msg">已读</string>
+    <string name="text_delivered_msg">送达</string>
+    <string name="back">返回</string>
+    <string name="button_pushtotalk">按住说话</string>
+    <string name="button_send">发送</string>
+    <string name="attach_picture">图片</string>
+    <string name="attach_take_pic">拍照</string>
+    <string name="attach_location">位置</string>
+    <string name="attach_file">文件</string>
+    <string name="attach_voice_call">语音电话</string>
+    <string name="attach_video_call">视频通话</string>
+    <string name="move_up_to_cancel">手指上滑，取消发送</string>
+    <string name="delete_message">删除消息</string>
+    <string name="copy_message">复制消息</string>
+    <string name="delete_voice">删除语音</string>
+    <string name="delete_video">删除视频</string>
+    <string name="delete">删除</string>
+    <string name="forward">转发</string>
+    <string name="ok">确认</string>
+    <string name="cancel">取消</string>
+    <string name="select_groupmember">"请选择群成员"</string>
+    <string name="search">搜索</string>
+    <string name="not_download">未下载:</string>
+
+    <string name="unable_to_get_loaction">无法获取到您的位置信息!</string>
+    <string name="sd_card_does_not_exist">SD卡不存在，不能拍照</string>
+    <string name="cant_find_pictures">找不到图片</string>
+    <string name="File_does_not_exist">文件不存在</string>
+    <string name="The_file_is_not_greater_than_10_m">文件不能大于10M</string>
+    <string name="HeadImage_Upload_failed">头像上传失败</string>
+
+
+
+    <string name="want_to_cancle">松开手指，取消发送</string>
+    <string name="shouzhishanghua">手指上滑，取消发送</string>
+    <string name="tooshort">录音时间过短</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="xianglintong">消息</string>
+    <string name="menu_message">消息</string>
+    <string name="menu_contact">名录</string>
+    <string name="menu_me">我</string>
+    <string name="menu_web">浏览</string>
+
+    <string name="preview">预览</string>
+    <string name="recent_photos">最近照片</string>
+    <string name="max_img_limit_reached">不能选择超过%d个图像</string>
+    <string name="set_username_tip">请输入您的用户名</string>
+    <string name="set_username_tip2">请输入您的真实姓名</string>
+    <string name="set_username_tip3">用户名过长</string>
+    <string name="set_username_tip4">用户名过短</string>
+    <string name="activity_nearby_title">附近的人</string>
+    <string name="activity_sweep_title">扫描二维码</string>
+    <string name="activity_bsncard_title">选择朋友</string>
+    <string name="activity_newcard_title">新建卡片</string>
+    <string name="group_list">群列表</string>
+    <string name="group_create_fail">创建群失败</string>
+    <string name="group_member_list">群成员列表</string>
+    <string name="group_member_new">发起对话</string>
+
+    <string name="group_list_me">全部群成员(%s)</string>
+    <string name="group_name_up">修改群名称</string>
+    <string name="group_name_up_value">群名称xx</string>
+    <string name="group_list_ch">转让群</string>
+    <string name="group_exit_delect">退出并删除本群</string>
+    <string name="group_no_delete">请选择要删除的群成员</string>
+
+
+    <item name="rigsteracitvity_no_select_xlid" type="id">请选择一个ID</item>
+    <item name="sd_error" type="id">"未检测到SD卡"</item>
+
+
+    <string name="xlistview_header_hint_normal">下拉刷新</string>
+    <string name="xlistview_header_hint_ready">释放立即刷新</string>
+    <string name="xlistview_header_hint_loading">正在刷新...</string>
+    <string name="xlistview_header_last_time">上次更新时间：</string>
+    <string name="xlistview_footer_hint_normal">查看更多</string>
+    <string name="xlistview_footer_hint_ready">松开载入更多</string>
+    <string name="tip_set_group_name">群聊名称</string>
+    <string name="tip_save">完成</string>
+
+
+    <string name="crop__saving">正在保存照片…</string>
+    <string name="crop__wait">请等待…</string>
+    <string name="crop__pick_error">无效的图片</string>
+
+    <string name="crop__done">完成</string>
+    <string name="crop__cancel">取消</string>
+    <string name="select_groupmember_more">请最少选择两位联系人</string>
+    <string name="contact_loading">加载中.....</string>
+    <string name="listfooterview_normal">查看更多</string>
+    <string name="listfooterview_ready">松开载入更多</string>
+    <string name="network_unknown_error_tip">网络不给力，请稍后再试!</string>
+    <string name="online_error_layout_text_tip_1">网络连接异常，请点击重试！</string>
+    <string name="online_error_layout_text_tip_2">暂无交易数据！</string>
+    <string name="online_error_layout_text_tip_3">数据加载失败啦，</string>
+    <string name="online_error_layout_text_tip_4">暂无您的交易数据</string>
+    <string name="online_error_layout_text_tip_5">页面加载失败啦，</string>
+    <string name="please_retry">请重试</string>
+
+</resources>

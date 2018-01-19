@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/root_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/app_bgcolor"
+                android:fitsSystemWindows="true">
+
+    <com.weidi.bluetoothchat.widget.TopView
+        android:id="@+id/top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:topview_isAdjustResize="true"/>
+
+    <LinearLayout
+        android:id="@+id/bar_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/sys_msg_tv"
+            style="@style/chat_text_name_style"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/bar_bottom"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="10dp"
+            android:textColor="@color/red"
+            android:textSize="20sp"
+            android:visibility="gone"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="#B5B5B3"/>
+
+        <LinearLayout
+            android:id="@+id/rl_bottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_set_mode_voice"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginLeft="6dp"
+                android:background="@drawable/chatting_setmode_voice_btn"
+                android:onClick="setModeVoice"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/btn_set_mode_keyboard"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginLeft="6dp"
+                android:background="@drawable/chatting_setmode_keyboard_btn"
+                android:visibility="gone"/>
+
+            <LinearLayout
+                android:id="@+id/btn_press_to_speak"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                android:layout_marginTop="5dp"
+                android:layout_weight="1"
+
+                android:gravity="center"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/btn_send_voice"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/speake_button_selector"
+                    android:gravity="center"
+                    android:minHeight="35dp"
+                    android:text="按住说话"
+                    android:textColor="#666666"
+                    android:textSize="16sp"/>
+            </LinearLayout>
+
+
+            <RelativeLayout
+                android:id="@+id/edittext_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                android:layout_marginTop="5dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical">
+
+                <com.weidi.bluetoothchat.widget.PasteEditText
+                    android:id="@+id/sendmessage_pet"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/shape_input_bg"
+                    android:gravity="center_vertical"
+                    android:maxLength="250"
+                    android:maxLines="4"
+                    android:minHeight="@dimen/dimen_35_dip"
+                    android:textSize="14sp"/>
+
+                <ImageView
+                    android:id="@+id/iv_emoticons_normal"
+                    android:layout_width="24dip"
+                    android:layout_height="24dip"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center_vertical|right"
+                    android:layout_margin="1dip"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/chatting_biaoqing_btn_normal"
+                    android:visibility="gone"/>
+
+                <ImageView
+                    android:id="@+id/iv_emoticons_checked"
+                    android:layout_width="24dip"
+                    android:layout_height="24dip"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center_vertical|right"
+                    android:layout_margin="1dip"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/chatting_biaoqing_btn_enable"
+                    android:visibility="gone"/>
+            </RelativeLayout>
+
+            <Button
+                android:id="@+id/btn_more"
+                android:layout_width="32dip"
+                android:layout_height="26dip"
+                android:layout_marginRight="10dp"
+                android:background="@drawable/img_send_icon"
+                android:onClick="more"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/send_btn"
+                android:layout_width="50dp"
+                android:layout_height="32dp"
+                android:layout_marginRight="4dp"
+                android:background="@drawable/chat_send_btn_selector"
+                android:text="发送"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:visibility="visible"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_bottom_menu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#ffffff"
+            android:orientation="horizontal"
+            android:padding="5dp"
+            android:visibility="visible">
+
+            <LinearLayout
+                android:id="@+id/ll_chat_pic"
+                android:layout_width="0dp"
+                android:layout_height="35dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/iv_pic_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/chat_pic_def"
+                    />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_chat_voice"
+                android:layout_width="0dp"
+                android:layout_height="35dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/iv_voice_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/chat_voice_def"
+                    />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_chat_face"
+                android:layout_width="0dp"
+                android:layout_height="35dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/iv_face_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/chat_face_def"
+                    />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_chat_card"
+                android:layout_width="0dp"
+                android:layout_height="35dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/iv_card_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/chat_card_def"
+                    />
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_menu_container"
+            android:layout_width="match_parent"
+            android:layout_height="235dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/xlistview_rl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/bar_bottom"
+        android:layout_below="@id/top_bar">
+
+        <ProgressBar
+            android:id="@+id/pb_load_more"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_centerHorizontal="true"
+            android:visibility="gone"/>
+
+        <!--<com.weidi.bluetoothchat.widget.XListView-->
+        <ListView
+            android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/pb_load_more"
+            android:cacheColorHint="#00000000"
+            android:divider="@null"
+            android:listSelector="#00000000"
+            android:scrollbars="none"
+            android:smoothScrollbar="true"
+            android:transcriptMode="normal"/>
+
+    </RelativeLayout>
+
+    <FrameLayout
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="16dp">
+
+        <ImageView
+            android:id="@+id/prompt_iv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/sys_prompt"
+            android:visibility="gone"/>
+    </FrameLayout>
+
+</RelativeLayout>

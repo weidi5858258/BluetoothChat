@@ -1,0 +1,90 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/topview"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/app_title_bg">
+
+    <View
+        android:id="@+id/view_status_bar"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/transparent"
+        tools:layout_height="25dp"></View>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/layout_title_height"
+        android:layout_below="@+id/view_status_bar"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/txt_left"
+            style="@style/txt_titleStyle2"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:textColor="@color/head_text_color"
+            android:text="@string/app_name"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <LinearLayout
+            android:id="@+id/ll_back_layout"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:background="@drawable/right_image_selector"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/img_back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/icon_back" />
+
+        </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/txt_title"
+            style="@style/txt_titleStyle1"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+
+            android:gravity="center"
+            android:text="@string/menu_message" />
+
+        <LinearLayout
+            android:id="@+id/ll_right_layout"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:visibility="gone"
+            android:background="@drawable/right_image_selector"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/img_right"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:contentDescription="@string/app_name" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txt_right"
+            style="@style/txt_titleStyle2"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:textColor="@color/black1"
+            tools:text="@string/xianglintong"
+            tools:visibility="visible" />
+    </RelativeLayout>
+</RelativeLayout>

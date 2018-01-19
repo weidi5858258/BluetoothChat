@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin">
+
+    <!--<TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dip"
+        android:layout_marginEnd="8dip"
+        android:layout_marginStart="8dip"
+        android:layout_marginTop="8dip"
+        android:text="请输入远程设备蓝牙地址:">
+    </TextView>-->
+
+    <EditText android:id="@+id/bt_address_et"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginBottom="8dip"
+              android:layout_marginEnd="8dip"
+              android:layout_marginStart="8dip"
+              android:hint="请输入远程设备蓝牙地址"
+              android:inputType="textCapSentences"
+              android:maxLength="200"
+              android:singleLine="true">
+        <requestFocus/>
+    </EditText>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="6dip">
+
+        <Button android:id="@+id/input_address_btn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/ok"
+                android:textColor="#009486"/>
+
+        <Button android:id="@+id/cancel_btn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/cancel"
+                android:textColor="#009486"/>
+
+    </LinearLayout>
+
+</LinearLayout>
+
