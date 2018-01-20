@@ -68,7 +68,7 @@ public abstract class CustomListViewAdapter<T> extends ListViewAdapter<T> implem
      */
 
     @Override
-    public final void add(T item) {
+    public void add(T item) {
         //        mData.add(item);
         //        int location = mData.size() - 1;
         //        if (hasHeaderView()) {
@@ -144,7 +144,7 @@ public abstract class CustomListViewAdapter<T> extends ListViewAdapter<T> implem
     }
 
     @Override
-    public final void addAll(List<T> items) {
+    public void addAll(List<T> items) {
         if (items == null || items.isEmpty()) {
             Log.w(TAG, "addAll: The list you passed contains no elements.");
             return;
@@ -175,14 +175,14 @@ public abstract class CustomListViewAdapter<T> extends ListViewAdapter<T> implem
     }
 
     @Override
-    public final void remove(T item) {
+    public void remove(T item) {
         if (contains(item)) {
             remove(mData.indexOf(item));
         }
     }
 
     @Override
-    public final void remove(int location) {
+    public void remove(int location) {
         mData.remove(location);
         if (hasHeaderView()) {
             ++location;
@@ -248,12 +248,12 @@ public abstract class CustomListViewAdapter<T> extends ListViewAdapter<T> implem
     }
 
     @Override
-    public final void set(T oldItem, T newItem) {
+    public void set(T oldItem, T newItem) {
         set(mData.indexOf(oldItem), newItem);
     }
 
     @Override
-    public final void set(int location, T item) {
+    public void set(int location, T item) {
         mData.set(location, item);
         if (hasHeaderView()) {
             ++location;
@@ -262,7 +262,7 @@ public abstract class CustomListViewAdapter<T> extends ListViewAdapter<T> implem
     }
 
     @Override
-    public final void replaceAll(List<T> items) {
+    public void replaceAll(List<T> items) {
         if (mData == items) {
             notifyDataSetChanged();
             notifyDataSetChanged();
@@ -295,7 +295,7 @@ public abstract class CustomListViewAdapter<T> extends ListViewAdapter<T> implem
     }
 
     @Override
-    public final boolean contains(T item) {
+    public boolean contains(T item) {
         return mData.contains(item);
     }
 
@@ -305,7 +305,7 @@ public abstract class CustomListViewAdapter<T> extends ListViewAdapter<T> implem
     }
 
     @Override
-    public final void clear() {
+    public void clear() {
         int count = getCount();
         if (count > 0) {
             mData.clear();

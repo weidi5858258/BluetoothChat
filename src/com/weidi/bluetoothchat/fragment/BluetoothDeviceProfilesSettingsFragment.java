@@ -18,14 +18,10 @@ package com.weidi.bluetoothchat.fragment;
 
 import android.os.Bundle;
 import android.preference.Preference;
-import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.view.MenuItem;
 
-import com.weidi.bluetoothchat.controller.fragmentcontroller
-        .BluetoothDeviceProfilesSettingsFragmentController;
 import com.weidi.bluetoothchat.fragment.base.BasePreferenceFragment;
-import com.weidi.bluetoothchat.settings.CachedBluetoothDevice;
 import com.weidi.log.Log;
 
 /**
@@ -37,43 +33,43 @@ public final class BluetoothDeviceProfilesSettingsFragment extends BasePreferenc
 
     private static final String TAG = "BluetoothDeviceProfilesSettingsFragment";
 
-    private BluetoothDeviceProfilesSettingsFragmentController
-            mBluetoothDeviceProfilesSettingsFragmentController;
+//    private BluetoothDeviceProfilesSettingsFragmentController
+//            mBluetoothDeviceProfilesSettingsFragmentController;
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate(): savedInstanceState = " + savedInstanceState);
-        mBluetoothDeviceProfilesSettingsFragmentController =
-                new BluetoothDeviceProfilesSettingsFragmentController(this);
-        mBluetoothDeviceProfilesSettingsFragmentController.onCreate(savedInstanceState);
+//        mBluetoothDeviceProfilesSettingsFragmentController =
+//                new BluetoothDeviceProfilesSettingsFragmentController(this);
+//        mBluetoothDeviceProfilesSettingsFragmentController.onCreate(savedInstanceState);
     }
 
     @Override
     public void onResume() {
         super.onResume();
         Log.d(TAG, "onResume()");
-        mBluetoothDeviceProfilesSettingsFragmentController.onResume();
+//        mBluetoothDeviceProfilesSettingsFragmentController.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause()");
-        mBluetoothDeviceProfilesSettingsFragmentController.onPause();
+//        mBluetoothDeviceProfilesSettingsFragmentController.onPause();
     }
 
     @Override
     public void onStop() {
         super.onStop();
         Log.d(TAG, "onStop()");
-        mBluetoothDeviceProfilesSettingsFragmentController.onStop();
+//        mBluetoothDeviceProfilesSettingsFragmentController.onStop();
     }
 
     @Override
     public void onDestroy() {
-        mBluetoothDeviceProfilesSettingsFragmentController.onDestroy();
+//        mBluetoothDeviceProfilesSettingsFragmentController.onDestroy();
         super.onDestroy();
         Log.d(TAG, "onDestroy()");
     }
@@ -86,23 +82,23 @@ public final class BluetoothDeviceProfilesSettingsFragment extends BasePreferenc
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        mBluetoothDeviceProfilesSettingsFragmentController.onSaveInstanceState(outState);
+//        mBluetoothDeviceProfilesSettingsFragmentController.onSaveInstanceState(outState);
     }
 
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen screen, Preference preference) {
-        if (mBluetoothDeviceProfilesSettingsFragmentController
-                .onPreferenceTreeClick(screen, preference)) {
-            return true;
-        }
+//        if (mBluetoothDeviceProfilesSettingsFragmentController
+//                .onPreferenceTreeClick(screen, preference)) {
+//            return true;
+//        }
         return super.onPreferenceTreeClick(screen, preference);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (mBluetoothDeviceProfilesSettingsFragmentController.onOptionsItemSelected(item)) {
-            return true;
-        }
+//        if (mBluetoothDeviceProfilesSettingsFragmentController.onOptionsItemSelected(item)) {
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 

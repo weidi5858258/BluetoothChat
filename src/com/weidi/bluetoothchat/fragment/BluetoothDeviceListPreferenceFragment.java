@@ -16,19 +16,14 @@
 
 package com.weidi.bluetoothchat.fragment;
 
-import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.Preference;
-import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import com.weidi.bluetoothchat.R;
-import com.weidi.bluetoothchat.controller.fragmentcontroller
-        .BluetoothDeviceListPreferenceFragmentController;
 import com.weidi.bluetoothchat.fragment.base.BasePreferenceFragment;
 import com.weidi.log.Log;
 
@@ -40,42 +35,42 @@ public class BluetoothDeviceListPreferenceFragment extends BasePreferenceFragmen
 
     private static final String TAG = "BluetoothDeviceListPreferenceFragment";
 
-    private BluetoothDeviceListPreferenceFragmentController
-            mBluetoothDeviceListPreferenceFragmentController;
+//    private BluetoothDeviceListPreferenceFragmentController
+//            mBluetoothDeviceListPreferenceFragmentController;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate(): savedInstanceState = " + savedInstanceState);
-        mBluetoothDeviceListPreferenceFragmentController =
-                new BluetoothDeviceListPreferenceFragmentController(this);
-        mBluetoothDeviceListPreferenceFragmentController.onCreate(savedInstanceState);
+//        mBluetoothDeviceListPreferenceFragmentController =
+//                new BluetoothDeviceListPreferenceFragmentController(this);
+//        mBluetoothDeviceListPreferenceFragmentController.onCreate(savedInstanceState);
     }
 
     @Override
     public void onResume() {
         super.onResume();
         Log.d(TAG, "onResume()");
-        mBluetoothDeviceListPreferenceFragmentController.onResume();
+//        mBluetoothDeviceListPreferenceFragmentController.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause()");
-        mBluetoothDeviceListPreferenceFragmentController.onPause();
+//        mBluetoothDeviceListPreferenceFragmentController.onPause();
     }
 
     @Override
     public void onStop() {
         super.onStop();
         Log.d(TAG, "onStop()");
-        mBluetoothDeviceListPreferenceFragmentController.onStop();
+//        mBluetoothDeviceListPreferenceFragmentController.onStop();
     }
 
     @Override
     public void onDestroy() {
-        mBluetoothDeviceListPreferenceFragmentController.onDestroy();
+//        mBluetoothDeviceListPreferenceFragmentController.onDestroy();
         super.onDestroy();
         Log.d(TAG, "onDestroy()");
     }
@@ -88,32 +83,32 @@ public class BluetoothDeviceListPreferenceFragment extends BasePreferenceFragmen
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        mBluetoothDeviceListPreferenceFragmentController
-                .onActivityResult(requestCode, resultCode, data);
+//        mBluetoothDeviceListPreferenceFragmentController
+//                .onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     public boolean onPreferenceTreeClick(
             PreferenceScreen preferenceScreen,
             Preference preference) {
-        if (mBluetoothDeviceListPreferenceFragmentController
-                .onPreferenceTreeClick(preferenceScreen, preference)) {
-            return true;
-        }
+//        if (mBluetoothDeviceListPreferenceFragmentController
+//                .onPreferenceTreeClick(preferenceScreen, preference)) {
+//            return true;
+//        }
         return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        mBluetoothDeviceListPreferenceFragmentController.onCreateOptionsMenu(menu, inflater);
+//        mBluetoothDeviceListPreferenceFragmentController.onCreateOptionsMenu(menu, inflater);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (mBluetoothDeviceListPreferenceFragmentController.onOptionsItemSelected(item)) {
-            return true;
-        }
+//        if (mBluetoothDeviceListPreferenceFragmentController.onOptionsItemSelected(item)) {
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
